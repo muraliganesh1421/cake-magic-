@@ -11,14 +11,14 @@ export default function SocialProof({ reviews }: SocialProofProps) {
     <section className="py-20 bg-[var(--surface-alt)]/40 border-t border-[var(--surface-border)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center mb-14">
-          <span className="text-xs uppercase tracking-[0.25em] font-semibold text-[var(--foreground-muted)]">
-            Verified Experiences &bull; Rajahmundry
+          <span className="text-xs uppercase tracking-[0.25em] font-semibold text-[var(--primary)]">
+            Verified Reviews &bull; Rajahmundry
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--foreground)] mt-2">
-            Made for Celebrations Across Rajahmundry
+            Loved for Life&apos;s Sweetest Celebrations
           </h2>
           <p className="text-sm md:text-base text-[var(--foreground-muted)] mt-2">
-            Read authentic feedback from families and hosts celebrating birthdays, anniversaries, and milestones with Cake Magic.
+            Authentic experiences from families and hosts celebrating birthdays, anniversaries, and milestones with Cake Magic.
           </p>
         </div>
 
@@ -26,7 +26,7 @@ export default function SocialProof({ reviews }: SocialProofProps) {
           {reviews.map((rev) => (
             <div
               key={rev.id}
-              className="bg-[var(--surface)] p-6 sm:p-8 rounded-2xl border border-[var(--surface-border)] shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow"
+              className="bg-[var(--surface)] p-6 sm:p-7 rounded-xl border border-[var(--surface-border)] shadow-xs flex flex-col justify-between"
             >
               <div>
                 {/* Stars & Source */}

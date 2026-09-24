@@ -99,7 +99,7 @@ export default function CustomCakeFeature() {
 
           {/* Right Column: Visual Transformation Showcase */}
           <div className="lg:col-span-6">
-            <div className="relative p-3 sm:p-5 rounded-3xl bg-[var(--surface-alt)] border border-[var(--surface-border)] shadow-xl">
+            <div className="relative p-3 sm:p-5 rounded-2xl bg-[var(--surface-alt)] border border-[var(--surface-border)] shadow-sm">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                 {/* Reference Inspiration Card */}
                 <div className="relative rounded-2xl overflow-hidden aspect-4/5 border border-dashed border-[var(--surface-border-strong)] bg-white/50 p-3 flex flex-col justify-between">

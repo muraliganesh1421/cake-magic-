@@ -69,7 +69,7 @@ export default function OccasionDiscovery() {
             <Link
               key={occ.title}
               href={occ.href}
-              className="group relative rounded-2xl overflow-hidden aspect-4/5 bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              className="group relative rounded-xl overflow-hidden aspect-4/5 bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs hover:shadow-md transition-shadow duration-300"
             >
               <Image
                 src={occ.image}

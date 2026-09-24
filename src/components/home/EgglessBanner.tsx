@@ -6,7 +6,7 @@ export default function EgglessBanner() {
   return (
     <section className="py-16 md:py-20 bg-[var(--surface)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl bg-[var(--surface-alt)] border border-[var(--surface-border)] overflow-hidden shadow-lg grid grid-cols-1 lg:grid-cols-12 items-center">
+        <div className="rounded-2xl bg-[var(--surface-alt)] border border-[var(--surface-border)] overflow-hidden shadow-sm grid grid-cols-1 lg:grid-cols-12 items-center">
           {/* Left Text */}
           <div className="lg:col-span-7 p-8 sm:p-12 lg:p-16 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--badge-eggless-bg)] text-[var(--badge-eggless-text)] border border-[var(--badge-eggless-border)] text-xs font-semibold">

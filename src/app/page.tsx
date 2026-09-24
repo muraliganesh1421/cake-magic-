@@ -3,7 +3,7 @@ import Hero from "@/components/home/Hero";
 import OccasionDiscovery from "@/components/home/OccasionDiscovery";
 import FeaturedCakes from "@/components/home/FeaturedCakes";
 import CustomCakeFeature from "@/components/home/CustomCakeFeature";
-import CakeFinder from "@/components/home/CakeFinder";
+import DreamCakeSection from "@/components/home/DreamCakeSection";
 import EgglessBanner from "@/components/home/EgglessBanner";
 import SocialProof from "@/components/home/SocialProof";
 import InstagramFeed from "@/components/home/InstagramFeed";
@@ -14,28 +14,28 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col w-full">
-      {/* Editorial Hero */}
+      {/* 1. Hero: What is Cake Magic? */}
       <Hero />
 
-      {/* Occasion Discovery Cards */}
-      <OccasionDiscovery />
-
-      {/* Signature Featured Cakes */}
+      {/* 2. Featured Cakes: What can I buy? */}
       <FeaturedCakes products={products} />
 
-      {/* Custom Cake Visual Transformation Section */}
+      {/* 3. Occasions: What are you celebrating? */}
+      <OccasionDiscovery />
+
+      {/* 4. AI Cake Customizer: Create Your Dream Cake */}
+      <DreamCakeSection />
+
+      {/* 5. Custom Cake: Can Cake Magic make my idea? */}
       <CustomCakeFeature />
 
-      {/* Interactive 3-Question Cake Finder */}
-      <CakeFinder products={products} />
-
-      {/* Dedicated Eggless Feature */}
+      {/* 6. Eggless Collection Feature */}
       <EgglessBanner />
 
-      {/* Genuine Social Proof & Reviews */}
+      {/* 7. Reviews: Can I trust them? */}
       <SocialProof reviews={reviews} />
 
-      {/* Fresh From Our Kitchen Gallery */}
+      {/* 8. Gallery / Kitchen Feed: What kind of cakes do they create? */}
       <InstagramFeed />
     </div>
   );

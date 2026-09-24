@@ -73,7 +73,7 @@ export default function InstagramFeed() {
           {kitchenShots.map((item, idx) => (
             <div
               key={idx}
-              className="group relative aspect-square rounded-2xl overflow-hidden bg-[var(--surface-alt)] border border-[var(--surface-border)]"
+              className="group relative aspect-square rounded-xl overflow-hidden bg-[var(--surface-alt)] border border-[var(--surface-border)]"
             >
               <Image
                 src={item.image}

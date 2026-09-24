@@ -17,14 +17,14 @@ export default function FeaturedCakes({ products }: FeaturedCakesProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div>
-            <span className="text-xs uppercase tracking-[0.25em] font-semibold text-[var(--foreground-muted)]">
-              Signature Patisserie Creations
+            <span className="text-xs uppercase tracking-[0.25em] font-semibold text-[var(--primary)]">
+              Signature Collection &bull; Rajahmundry
             </span>
             <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--foreground)] mt-1.5">
-              Made for the Moment
+              Cakes for Every Celebration
             </h2>
             <p className="text-sm md:text-base text-[var(--foreground-muted)] mt-2 max-w-xl">
-              From decadent Belgian dark chocolate truffle to artisanal Lotus Biscoff, every recipe is hand-baked with premium ingredients.
+              From Belgian dark chocolate truffle to artisanal Lotus Biscoff, freshly baked to order with premium ingredients.
             </p>
           </div>
 
