@@ -125,16 +125,26 @@ export default function Footer() {
             <div className="space-y-2.5 text-xs text-[var(--foreground-muted)]">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
-                <span>{siteConfig.address}</span>
+                <span>
+                  {siteConfig.hasOwnerAddress
+                    ? siteConfig.address
+                    : "Rajahmundry, Andhra Pradesh, India"}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[var(--primary)] shrink-0" />
-                <span>Hours: {siteConfig.openingHours}</span>
+                <span>
+                  {siteConfig.hasOwnerHours
+                    ? `Hours: ${siteConfig.openingHours}`
+                    : "Pre-orders & celebration enquiries open daily"}
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[var(--primary)] shrink-0" />
-                <span>{siteConfig.phone}</span>
-              </div>
+              {siteConfig.hasOwnerPhone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-[var(--primary)] shrink-0" />
+                  <span>{siteConfig.phone}</span>
+                </div>
+              )}
               <div className="flex items-start gap-2 pt-1 text-[11px] text-[var(--foreground-subtle)]">
                 <ShieldCheck className="w-4 h-4 text-[var(--badge-eggless-text)] shrink-0" />
                 <span>Advance order recommended for multi-tier and custom designer themes.</span>

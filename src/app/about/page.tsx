@@ -140,8 +140,8 @@ export default function AboutPage() {
               Drop by our bakery counter in Rajahmundry to explore today&apos;s fresh bakes, pick up dessert tubs, or consult with our team on upcoming celebration cakes.
             </p>
             <div className="text-xs text-[var(--foreground-muted)] space-y-1">
-              <div><strong>Address:</strong> {siteConfig.address}</div>
-              <div><strong>Hours:</strong> {siteConfig.openingHours}</div>
+              <div><strong>Location:</strong> {siteConfig.hasOwnerAddress ? siteConfig.address : "Rajahmundry, Andhra Pradesh"}</div>
+              <div><strong>Celebration Orders:</strong> {siteConfig.hasOwnerHours ? siteConfig.openingHours : "Pre-orders and bespoke enquiries open daily"}</div>
             </div>
           </div>
 

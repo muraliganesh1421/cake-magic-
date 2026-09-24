@@ -189,11 +189,13 @@ export default function CustomCakeWizard({
     occasion,
     flavour,
     size: finalSize,
-    eggless: eggless ? "Yes (100% Eggless)" : "Regular",
-    message: cakeMessage,
-    date: deliveryDate || "Upcoming",
-    deliveryType,
-    location: deliveryType === "Delivery" ? address : "Pickup from Rajahmundry store",
+    eggless: eggless ? "Yes (100% Vegetarian)" : "Regular",
+    theme: referenceImage ? "Custom Reference Design" : "Bespoke Artisanal",
+    colour: "As per celebration theme",
+    message: cakeMessage || "None",
+    date: deliveryDate || "To be confirmed",
+    deliveryType: deliveryType === "Delivery" ? `Delivery to ${address || "Rajahmundry"}` : "Store Pickup in Rajahmundry",
+    notes: notes || undefined,
   });
 
   return (
@@ -240,7 +242,7 @@ export default function CustomCakeWizard({
       )}
 
       {/* Main Wizard Card */}
-      <div className="bg-[var(--surface)] rounded-3xl border border-[var(--surface-border)] shadow-md p-6 sm:p-8">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--surface-border)] shadow-sm p-6 sm:p-8">
         {/* POST-SUBMISSION STATE */}
         {submittedRequest ? (
           <div className="text-center py-8 space-y-6 animate-in fade-in duration-300">

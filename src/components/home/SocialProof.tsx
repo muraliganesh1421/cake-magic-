@@ -12,7 +12,7 @@ export default function SocialProof({ reviews }: SocialProofProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center mb-14">
           <span className="text-xs uppercase tracking-[0.25em] font-semibold text-[var(--primary)]">
-            Verified Reviews &bull; Rajahmundry
+            Customer Experiences &bull; Rajahmundry
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--foreground)] mt-2">
             Loved for Life&apos;s Sweetest Celebrations
@@ -47,14 +47,11 @@ export default function SocialProof({ reviews }: SocialProofProps) {
                 </p>
               </div>
 
-              {/* Author & Verification */}
+              {/* Author & Details */}
               <div className="mt-6 pt-4 border-t border-[var(--surface-border)] flex items-center justify-between">
                 <div>
-                  <div className="font-medium text-xs text-[var(--foreground)] flex items-center gap-1.5">
+                  <div className="font-semibold text-xs text-[var(--foreground)]">
                     <span>{rev.name}</span>
-                    {rev.verified && (
-                      <CheckCircle className="w-3.5 h-3.5 text-[var(--badge-eggless-text)]" />
-                    )}
                   </div>
                   {rev.date && (
                     <span className="text-[10px] text-[var(--foreground-muted)]">

@@ -12,16 +12,21 @@ import {
   ChevronDown,
   ArrowRight,
   Info,
+  Calendar,
+  Camera,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   AVAILABLE_OCCASIONS,
   AVAILABLE_FLAVOURS,
   AVAILABLE_SIZES,
+  AVAILABLE_STYLES,
+  AVAILABLE_COLOUR_THEMES,
   DreamCakeInput,
   DreamCakeConcept,
   generateCakeConcept,
 } from "@/lib/aiCakeService";
-import { buildWhatsAppLink } from "@/config/site";
+import { buildWhatsAppLink, WhatsAppTemplates } from "@/config/site";
 
 export default function DreamCakeSection() {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,12 +34,16 @@ export default function DreamCakeSection() {
   const [concept, setConcept] = useState<DreamCakeConcept | null>(null);
 
   // Form State
-  const [occasion, setOccasion] = useState<DreamCakeInput["occasion"]>("Birthday");
+  const [occasion, setOccasion] = useState<string>("Birthday");
   const [flavour, setFlavour] = useState<string>(AVAILABLE_FLAVOURS[0]);
-  const [description, setDescription] = useState("");
   const [size, setSize] = useState<string>(AVAILABLE_SIZES[1]); // 1 kg
   const [eggless, setEggless] = useState(true);
+  const [styleTheme, setStyleTheme] = useState<string>(AVAILABLE_STYLES[0]);
+  const [colourPreference, setColourPreference] = useState<string>("Black & Antique Gold");
   const [cakeMessage, setCakeMessage] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
+  const [deliveryType, setDeliveryType] = useState("Rajahmundry Delivery");
+  const [additionalNotes, setAdditionalNotes] = useState("");
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
   const [imageFileName, setImageFileName] = useState<string | null>(null);
 
@@ -70,20 +79,23 @@ export default function DreamCakeSection() {
     e.preventDefault();
     setIsGenerating(true);
 
-    // Smooth synthesis pause (simulates concept engine & API dispatch)
     setTimeout(() => {
       const generated = generateCakeConcept({
         occasion,
         flavour,
-        description,
-        referenceImage,
         size,
         eggless,
+        styleTheme,
+        colourPreference,
         cakeMessage,
+        referenceImage,
+        deliveryDate,
+        deliveryType,
+        additionalNotes,
       });
       setConcept(generated);
       setIsGenerating(false);
-    }, 700);
+    }, 600);
   };
 
   const handleReset = () => {
@@ -91,45 +103,41 @@ export default function DreamCakeSection() {
   };
 
   const buildWhatsAppConceptUrl = (c: DreamCakeConcept) => {
-    const lines = [
-      `Hi Cake Magic, I created a custom cake concept and would like to enquire about making it:`,
-      ``,
-      `*Occasion:* ${c.occasion}`,
-      `*Flavour:* ${c.flavour}`,
-      `*Size:* ${c.size}`,
-      `*Eggless:* ${eggless ? "Yes (100% Vegetarian)" : "No"}`,
-      c.cakeMessage ? `*Cake Message:* "${c.cakeMessage}"` : null,
-      `*Design Theme:* ${c.theme}`,
-      `*Palette:* ${c.colours.map((col) => col.name).join(", ")}`,
-      c.description ? `*Customer Notes:* ${c.description}` : null,
-      c.referenceImage ? `(I also have a reference photo to share with you)` : null,
-      ``,
-      `Could you please review design feasibility, slot availability, and share a quote for Rajahmundry?`,
-    ].filter(Boolean);
+    const message = WhatsAppTemplates.customCakeEnquiry({
+      occasion: c.occasion,
+      flavour: c.flavour,
+      size: c.size,
+      eggless: c.eggless ? "Yes (100% Vegetarian)" : "Regular",
+      theme: c.theme,
+      colour: c.colour,
+      message: c.cakeMessage || "None",
+      date: c.deliveryDate || "To be confirmed",
+      deliveryType: c.deliveryType,
+      notes: c.additionalNotes || (c.referenceImage ? "Reference image attached" : "None"),
+    });
 
-    return buildWhatsAppLink(lines.join("\n"));
+    return buildWhatsAppLink(message);
   };
 
   return (
     <section
       ref={sectionRef}
       id="dream-cake"
-      className="py-16 md:py-24 bg-[var(--surface-alt)]/40 border-y border-[var(--surface-border)]"
+      className="py-16 md:py-24 bg-[var(--surface-alt)]/35 border-y border-[var(--surface-border)]"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--surface)] border border-[var(--surface-border)] text-xs font-semibold text-[var(--primary)] shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-[var(--accent-blush-dark)]" />
-            <span>AI Cake Concept Studio</span>
-          </div>
+          <span className="text-xs uppercase tracking-[0.28em] font-semibold text-[var(--primary)] block">
+            AI Cake Concept Studio
+          </span>
 
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--foreground)] tracking-tight">
-            Create Your Dream Cake
+            CREATE YOUR DREAM CAKE
           </h2>
 
           <p className="text-sm sm:text-base text-[var(--foreground-muted)] max-w-lg mx-auto leading-relaxed">
-            Have something special in mind? Tell us what you&apos;re imagining.
+            Tell us what you&apos;re imagining, add your inspiration, and create a personalized cake concept.
           </p>
 
           {!isOpen && !concept && (
@@ -146,18 +154,18 @@ export default function DreamCakeSection() {
           )}
         </div>
 
-        {/* Customizer Drawer / Form Container */}
+        {/* Customizer Container */}
         {(isOpen || concept) && (
           <div className="mt-10 bg-[var(--surface)] rounded-2xl border border-[var(--surface-border)] p-6 sm:p-8 md:p-10 shadow-sm transition-all">
             {!concept ? (
               /* --- Step 1: Input Form --- */
-              <form onSubmit={handleCreateConcept} className="space-y-8">
+              <form onSubmit={handleCreateConcept} className="space-y-7">
                 {/* 1. Occasion */}
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   <label className="block text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)]">
                     1. What are you celebrating?
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {AVAILABLE_OCCASIONS.map((occ) => {
                       const selected = occasion === occ;
                       return (
@@ -203,83 +211,57 @@ export default function DreamCakeSection() {
                   </div>
                 </div>
 
-                {/* 3. Description */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
+                {/* 3. Style / Theme & Colour */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Style Theme */}
+                  <div className="space-y-2">
                     <label
-                      htmlFor="cake-description"
+                      htmlFor="style-theme"
                       className="block text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)]"
                     >
-                      3. Describe your cake
+                      3. Style / Theme
                     </label>
-                    <span className="text-[11px] text-[var(--foreground-subtle)]">
-                      Theme, colours, style
-                    </span>
-                  </div>
-                  <textarea
-                    id="cake-description"
-                    rows={3}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="e.g. Chocolate cake with a black and gold theme for my brother's 25th birthday."
-                    className="w-full bg-[var(--surface-alt)]/50 border border-[var(--surface-border)] rounded-xl p-3.5 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-subtle)] focus:outline-none focus:border-[var(--primary)] transition-colors resize-none"
-                  />
-                </div>
-
-                {/* 4. Inspiration Upload */}
-                <div className="space-y-2">
-                  <label className="block text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)]">
-                    4. Upload inspiration (optional)
-                  </label>
-
-                  {referenceImage ? (
-                    <div className="relative inline-flex items-center gap-3 p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]/40">
-                      <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-[var(--surface-border)]">
-                        <Image
-                          src={referenceImage}
-                          alt="Reference preview"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="text-left pr-6">
-                        <span className="block text-xs font-semibold text-[var(--foreground)] truncate max-w-[200px]">
-                          {imageFileName || "Inspiration Photo"}
-                        </span>
-                        <span className="text-[11px] text-[var(--foreground-muted)]">
-                          Attached to concept
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="absolute top-2 right-2 p-1 rounded-full text-[var(--foreground-muted)] hover:text-red-600 transition-colors"
-                        aria-label="Remove image"
+                    <div className="relative">
+                      <select
+                        id="style-theme"
+                        value={styleTheme}
+                        onChange={(e) => setStyleTheme(e.target.value)}
+                        className="w-full appearance-none bg-[var(--surface-alt)]/50 border border-[var(--surface-border)] rounded-xl px-4 py-3 text-sm text-[var(--foreground)] font-medium focus:outline-none focus:border-[var(--primary)] transition-colors pr-10"
                       >
-                        <X className="w-4 h-4" />
-                      </button>
+                        {AVAILABLE_STYLES.map((st) => (
+                          <option key={st} value={st}>
+                            {st}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-4 h-4 text-[var(--foreground-muted)] absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
-                  ) : (
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="border border-dashed border-[var(--surface-border-strong)] rounded-xl p-4 sm:p-5 text-center cursor-pointer hover:bg-[var(--surface-alt)]/40 transition-colors"
+                  </div>
+
+                  {/* Colour Preference */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="colour-pref"
+                      className="block text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)]"
                     >
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                      <Upload className="w-5 h-5 mx-auto text-[var(--foreground-muted)] mb-1.5" />
-                      <span className="text-xs font-semibold text-[var(--foreground)] block">
-                        Upload cake or Pinterest reference photo
-                      </span>
-                      <span className="text-[11px] text-[var(--foreground-subtle)] block mt-0.5">
-                        JPG, PNG, WebP up to 5 MB
-                      </span>
+                      4. Colour Palette
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="colour-pref"
+                        value={colourPreference}
+                        onChange={(e) => setColourPreference(e.target.value)}
+                        className="w-full appearance-none bg-[var(--surface-alt)]/50 border border-[var(--surface-border)] rounded-xl px-4 py-3 text-sm text-[var(--foreground)] font-medium focus:outline-none focus:border-[var(--primary)] transition-colors pr-10"
+                      >
+                        {AVAILABLE_COLOUR_THEMES.map((theme) => (
+                          <option key={theme.label} value={theme.label}>
+                            {theme.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-4 h-4 text-[var(--foreground-muted)] absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* 5. Size & Eggless Preference */}
@@ -290,7 +272,7 @@ export default function DreamCakeSection() {
                       htmlFor="cake-size"
                       className="block text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)]"
                     >
-                      5. Cake size
+                      5. Cake Size
                     </label>
                     <div className="relative">
                       <select
@@ -312,7 +294,7 @@ export default function DreamCakeSection() {
                   {/* Eggless */}
                   <div className="space-y-2">
                     <label className="block text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)]">
-                      6. Eggless?
+                      6. Eggless Preference
                     </label>
                     <div className="grid grid-cols-2 gap-2 h-[46px]">
                       <button
@@ -343,22 +325,147 @@ export default function DreamCakeSection() {
                   </div>
                 </div>
 
-                {/* 7. Cake Message */}
+                {/* 7. Reference Image (Camera, Gallery, Desktop Upload) */}
                 <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)]">
+                      7. Upload Inspiration (Optional)
+                    </label>
+                    <span className="text-[11px] text-[var(--foreground-subtle)]">
+                      Camera, gallery or file
+                    </span>
+                  </div>
+
+                  {referenceImage ? (
+                    <div className="relative inline-flex items-center gap-3 p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]/40">
+                      <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-[var(--surface-border)]">
+                        <Image
+                          src={referenceImage}
+                          alt="Reference preview"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="text-left pr-6">
+                        <span className="block text-xs font-semibold text-[var(--foreground)] truncate max-w-[200px]">
+                          {imageFileName || "Reference Image"}
+                        </span>
+                        <span className="text-[11px] text-[var(--foreground-muted)]">
+                          Ready for concept review
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 p-1 rounded-full text-[var(--foreground-muted)] hover:text-red-600 transition-colors"
+                        aria-label="Remove image"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border border-dashed border-[var(--surface-border-strong)] rounded-xl p-4 sm:p-5 text-center cursor-pointer hover:bg-[var(--surface-alt)]/40 transition-colors"
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      <div className="flex items-center justify-center gap-2 text-[var(--foreground-muted)] mb-1.5">
+                        <Camera className="w-5 h-5" />
+                        <ImageIcon className="w-5 h-5" />
+                        <Upload className="w-5 h-5" />
+                      </div>
+                      <span className="text-xs font-semibold text-[var(--foreground)] block">
+                        Upload cake photo or sketch
+                      </span>
+                      <span className="text-[11px] text-[var(--foreground-subtle)] block mt-0.5">
+                        Take photo from camera, select from gallery, or upload from desktop
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 8. Message, Date & Delivery */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Cake Message */}
+                  <div className="space-y-1.5 sm:col-span-1">
+                    <label
+                      htmlFor="cake-msg"
+                      className="block text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)]"
+                    >
+                      8. Cake Message
+                    </label>
+                    <input
+                      id="cake-msg"
+                      type="text"
+                      value={cakeMessage}
+                      onChange={(e) => setCakeMessage(e.target.value)}
+                      placeholder="e.g. Happy Birthday Arjun"
+                      maxLength={40}
+                      className="w-full bg-[var(--surface-alt)]/50 border border-[var(--surface-border)] rounded-xl px-3.5 py-3 text-xs sm:text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-subtle)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                    />
+                  </div>
+
+                  {/* Delivery Date */}
+                  <div className="space-y-1.5 sm:col-span-1">
+                    <label
+                      htmlFor="deliv-date"
+                      className="block text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)]"
+                    >
+                      9. Preferred Date
+                    </label>
+                    <input
+                      id="deliv-date"
+                      type="date"
+                      value={deliveryDate}
+                      onChange={(e) => setDeliveryDate(e.target.value)}
+                      className="w-full bg-[var(--surface-alt)]/50 border border-[var(--surface-border)] rounded-xl px-3.5 py-3 text-xs sm:text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                    />
+                  </div>
+
+                  {/* Delivery / Pickup */}
+                  <div className="space-y-1.5 sm:col-span-1">
+                    <label
+                      htmlFor="deliv-type"
+                      className="block text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)]"
+                    >
+                      10. Delivery / Pickup
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="deliv-type"
+                        value={deliveryType}
+                        onChange={(e) => setDeliveryType(e.target.value)}
+                        className="w-full appearance-none bg-[var(--surface-alt)]/50 border border-[var(--surface-border)] rounded-xl px-3.5 py-3 text-xs sm:text-sm text-[var(--foreground)] font-medium focus:outline-none focus:border-[var(--primary)] transition-colors pr-8"
+                      >
+                        <option value="Rajahmundry Delivery">Rajahmundry Delivery</option>
+                        <option value="Store Pickup">Store Pickup</option>
+                      </select>
+                      <ChevronDown className="w-3.5 h-3.5 text-[var(--foreground-muted)] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 11. Additional Notes */}
+                <div className="space-y-1.5">
                   <label
-                    htmlFor="cake-msg"
+                    htmlFor="cake-notes"
                     className="block text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)]"
                   >
-                    7. Cake message (optional)
+                    11. Additional Notes
                   </label>
-                  <input
-                    id="cake-msg"
-                    type="text"
-                    value={cakeMessage}
-                    onChange={(e) => setCakeMessage(e.target.value)}
-                    placeholder="e.g. Happy Birthday Arjun!"
-                    maxLength={50}
-                    className="w-full bg-[var(--surface-alt)]/50 border border-[var(--surface-border)] rounded-xl px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-subtle)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                  <textarea
+                    id="cake-notes"
+                    rows={2}
+                    value={additionalNotes}
+                    onChange={(e) => setAdditionalNotes(e.target.value)}
+                    placeholder="Specific design ideas, dietary instructions, or topping preferences..."
+                    className="w-full bg-[var(--surface-alt)]/50 border border-[var(--surface-border)] rounded-xl p-3.5 text-xs sm:text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-subtle)] focus:outline-none focus:border-[var(--primary)] transition-colors resize-none"
                   />
                 </div>
 
@@ -378,20 +485,20 @@ export default function DreamCakeSection() {
                     onClick={() => setIsOpen(false)}
                     className="text-xs text-[var(--foreground-muted)] hover:text-[var(--foreground)] py-2"
                   >
-                    Cancel
+                    Close Customizer
                   </button>
                 </div>
               </form>
             ) : (
-              /* --- Step 2: AI Result Concept --- */
-              <div className="space-y-8 animate-fadeIn">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-5 border-b border-[var(--surface-border)]">
+              /* --- Step 2: Concept Result --- */
+              <div className="space-y-7 animate-fadeIn">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[var(--surface-border)]">
                   <div>
                     <span className="text-xs uppercase tracking-widest font-semibold text-[var(--primary)] block">
-                      Custom Patisserie Concept
+                      Custom Cake Design Concept
                     </span>
                     <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[var(--foreground)] mt-0.5">
-                      Your Cake Concept
+                      YOUR CAKE CONCEPT
                     </h3>
                   </div>
 
@@ -405,7 +512,7 @@ export default function DreamCakeSection() {
                   </button>
                 </div>
 
-                {/* Concept Details Card */}
+                {/* Concept Breakdown Card */}
                 <div className="bg-[var(--surface-alt)]/50 rounded-xl p-5 sm:p-6 border border-[var(--surface-border)] space-y-5">
                   <div>
                     <h4 className="font-serif text-lg sm:text-xl font-bold text-[var(--foreground)]">
@@ -416,14 +523,14 @@ export default function DreamCakeSection() {
                     </p>
                   </div>
 
-                  {/* Concept Attributes Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                  {/* Attributes Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
                     <div className="bg-[var(--surface)] p-3 rounded-lg border border-[var(--surface-border)]">
                       <span className="block text-[10px] uppercase tracking-wider font-semibold text-[var(--foreground-muted)]">
-                        Occasion
+                        Style / Theme
                       </span>
-                      <span className="text-xs font-bold text-[var(--foreground)] mt-0.5 block">
-                        {concept.occasion}
+                      <span className="text-xs font-bold text-[var(--foreground)] mt-0.5 block truncate">
+                        {concept.theme}
                       </span>
                     </div>
 
@@ -438,7 +545,7 @@ export default function DreamCakeSection() {
 
                     <div className="bg-[var(--surface)] p-3 rounded-lg border border-[var(--surface-border)]">
                       <span className="block text-[10px] uppercase tracking-wider font-semibold text-[var(--foreground-muted)]">
-                        Size &amp; Serves
+                        Size
                       </span>
                       <span className="text-xs font-bold text-[var(--foreground)] mt-0.5 block truncate">
                         {concept.size.split(" ")[0]}
@@ -447,93 +554,76 @@ export default function DreamCakeSection() {
 
                     <div className="bg-[var(--surface)] p-3 rounded-lg border border-[var(--surface-border)]">
                       <span className="block text-[10px] uppercase tracking-wider font-semibold text-[var(--foreground-muted)]">
-                        Dietary
+                        Colour Palette
                       </span>
-                      <span className="text-xs font-bold text-[var(--badge-eggless-text)] mt-0.5 block">
-                        {eggless ? "100% Eggless" : "Regular"}
+                      <span className="text-xs font-bold text-[var(--foreground)] mt-0.5 block truncate">
+                        {concept.colour}
                       </span>
                     </div>
                   </div>
 
-                  {/* Theme & Palette */}
-                  <div className="pt-2 border-t border-[var(--surface-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  {/* Detailed Specs */}
+                  <div className="pt-2 border-t border-[var(--surface-border)] grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div>
                       <span className="text-[10px] uppercase tracking-wider font-semibold text-[var(--foreground-muted)] block">
-                        Design Theme
+                        Eggless Preference
                       </span>
-                      <span className="text-xs font-semibold text-[var(--foreground)]">
-                        {concept.theme}
+                      <span className="text-xs font-semibold text-[var(--badge-eggless-text)]">
+                        {concept.eggless ? "100% Vegetarian Eggless Sponge" : "Regular Patisserie Sponge"}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[10px] uppercase tracking-wider font-semibold text-[var(--foreground-muted)] block mb-1">
-                        Curated Palette
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-[var(--foreground-muted)] block">
+                        Date &amp; Handover
                       </span>
-                      <div className="flex items-center gap-2">
-                        {concept.colours.map((col) => (
-                          <div
-                            key={col.name}
-                            className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--surface)] border border-[var(--surface-border)]"
-                          >
-                            <span
-                              className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0"
-                              style={{ backgroundColor: col.hex }}
-                            />
-                            <span className="text-[10px] font-medium text-[var(--foreground-muted)]">
-                              {col.name}
-                            </span>
-                          </div>
-                        ))}
+                      <span className="text-xs font-semibold text-[var(--foreground)]">
+                        {concept.deliveryDate ? `${concept.deliveryDate} • ` : ""}
+                        {concept.deliveryType}
+                      </span>
+                    </div>
+
+                    {concept.cakeMessage && (
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-[var(--foreground-muted)] block">
+                          Inscription Message
+                        </span>
+                        <span className="italic font-serif font-medium text-[var(--primary)] text-sm">
+                          &ldquo;{concept.cakeMessage}&rdquo;
+                        </span>
                       </div>
-                    </div>
+                    )}
+
+                    {concept.referenceImage && (
+                      <div className="sm:col-span-2 flex items-center gap-3 pt-1">
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-[var(--foreground-muted)]">
+                          Inspiration Photo Attached:
+                        </span>
+                        <div className="relative w-10 h-10 rounded-md border border-[var(--surface-border)] overflow-hidden">
+                          <Image
+                            src={concept.referenceImage}
+                            alt="Reference"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
-
-                  {/* Message & Reference image if present */}
-                  {(concept.cakeMessage || concept.referenceImage) && (
-                    <div className="pt-2 border-t border-[var(--surface-border)] flex flex-wrap items-center gap-4 text-xs">
-                      {concept.cakeMessage && (
-                        <div>
-                          <span className="text-[10px] uppercase tracking-wider font-semibold text-[var(--foreground-muted)] block">
-                            Inscription Message
-                          </span>
-                          <span className="italic font-serif font-medium text-[var(--primary)]">
-                            &ldquo;{concept.cakeMessage}&rdquo;
-                          </span>
-                        </div>
-                      )}
-
-                      {concept.referenceImage && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] uppercase tracking-wider font-semibold text-[var(--foreground-muted)]">
-                            Inspiration Photo Attached:
-                          </span>
-                          <div className="relative w-8 h-8 rounded border border-[var(--surface-border)] overflow-hidden">
-                            <Image
-                              src={concept.referenceImage}
-                              alt="Inspiration thumbnail"
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
 
-                {/* Owner-Safe Ordering Notice */}
+                {/* Owner Confirmation Notice */}
                 <div className="p-3.5 rounded-xl bg-[var(--surface-alt)] border border-[var(--surface-border)] flex items-start gap-2.5">
                   <Info className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
                   <p className="text-xs text-[var(--foreground-muted)] leading-relaxed">
                     <strong className="text-[var(--foreground)] font-semibold">
-                      Owner confirmation required:
+                      Design concept only:
                     </strong>{" "}
-                    Cake Magic will confirm final design availability and pricing.
+                    Cake Magic will confirm final design availability, preparation schedule, and pricing.
                   </p>
                 </div>
 
-                {/* Action Row */}
+                {/* Actions */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
                   <a
                     href={buildWhatsAppConceptUrl(concept)}

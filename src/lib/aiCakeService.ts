@@ -1,24 +1,32 @@
 export interface DreamCakeInput {
-  occasion: "Birthday" | "Anniversary" | "Wedding" | "Kids" | "Other";
+  occasion: string;
   flavour: string;
-  description: string;
-  referenceImage: string | null;
   size: string;
   eggless: boolean;
-  cakeMessage: string;
+  styleTheme?: string;
+  colourPreference?: string;
+  cakeMessage?: string;
+  referenceImage: string | null;
+  deliveryDate?: string;
+  deliveryType?: string;
+  additionalNotes?: string;
 }
 
 export interface DreamCakeConcept {
   id: string;
   title: string;
   designSummary: string;
-  description: string;
   occasion: string;
   flavour: string;
   size: string;
+  eggless: boolean;
   theme: string;
+  colour: string;
   colours: { name: string; hex: string }[];
   cakeMessage: string;
+  deliveryDate: string;
+  deliveryType: string;
+  additionalNotes: string;
   referenceImage: string | null;
   aiImageGenerated: boolean;
   aiImageUrl: string | null;
@@ -58,86 +66,120 @@ export const AVAILABLE_OCCASIONS = [
   "Birthday",
   "Anniversary",
   "Wedding",
+  "Baby Celebration",
   "Kids",
+  "Graduation",
+  "Just Because",
   "Other",
 ] as const;
 
 /**
- * Generate a refined cake concept from customer input.
- * Ready for live AI image integration (DALL-E / Imagen / Stability).
- * When no image API is hooked up, it reliably provides the concept analysis
+ * Curated artisanal design styles/themes
+ */
+export const AVAILABLE_STYLES = [
+  "Modern Minimalist",
+  "Vintage Lambeth Piping",
+  "Floral Botanical",
+  "Royal Opulent Metallic",
+  "Playful Theme Sculpted",
+  "Textured Buttercream Palette",
+] as const;
+
+/**
+ * Popular color harmonies
+ */
+export const AVAILABLE_COLOUR_THEMES = [
+  { label: "Black & Antique Gold", colours: [{ name: "Obsidian", hex: "#1C1513" }, { name: "Antique Gold", hex: "#D4AF37" }] },
+  { label: "Ivory & Warm Champagne", colours: [{ name: "Warm Ivory", hex: "#FAF7F2" }, { name: "Champagne", hex: "#EBDBC9" }] },
+  { label: "Muted Blush & Rose", colours: [{ name: "Blush", hex: "#E8C5BD" }, { name: "Rose Cocoa", hex: "#8C594D" }] },
+  { label: "Pastel Meadow & Mint", colours: [{ name: "Sage", hex: "#A8BAA8" }, { name: "Soft Ivory", hex: "#FAF7F2" }] },
+  { label: "Dusty Navy & Silver", colours: [{ name: "Navy", hex: "#2E3D4F" }, { name: "Silver Leaf", hex: "#C5C7CB" }] },
+] as const;
+
+/**
+ * Generate a refined cake design concept from customer input.
+ * Architected so a real AI image service can be connected cleanly.
+ * If no image API key is provided, it reliably provides the concept analysis
  * without faking an image.
  */
 export function generateCakeConcept(input: DreamCakeInput): DreamCakeConcept {
-  const descLower = (input.description || "").toLowerCase();
+  const combinedText = `${input.styleTheme || ""} ${input.colourPreference || ""} ${input.additionalNotes || ""}`.toLowerCase();
 
-  // Smart palette extraction based on prompt keywords
+  // Color palette analysis
   const colours: { name: string; hex: string }[] = [];
 
-  if (descLower.includes("gold") || descLower.includes("golden")) {
+  if (combinedText.includes("gold") || combinedText.includes("golden")) {
     colours.push({ name: "Antique Gold", hex: "#D4AF37" });
   }
-  if (descLower.includes("black") || descLower.includes("dark")) {
+  if (combinedText.includes("black") || combinedText.includes("dark")) {
     colours.push({ name: "Obsidian Cocoa", hex: "#1C1513" });
   }
-  if (descLower.includes("pink") || descLower.includes("blush") || descLower.includes("rose")) {
+  if (combinedText.includes("pink") || combinedText.includes("blush") || combinedText.includes("rose")) {
     colours.push({ name: "Muted Blush", hex: "#E8C5BD" });
   }
-  if (descLower.includes("blue") || descLower.includes("navy")) {
-    colours.push({ name: "Dusty Navy", hex: "#354A5F" });
+  if (combinedText.includes("blue") || combinedText.includes("navy")) {
+    colours.push({ name: "Dusty Navy", hex: "#2E3D4F" });
   }
-  if (descLower.includes("white") || descLower.includes("ivory") || descLower.includes("cream")) {
+  if (combinedText.includes("white") || combinedText.includes("ivory") || combinedText.includes("cream")) {
     colours.push({ name: "Warm Ivory", hex: "#FAF7F2" });
   }
-  if (descLower.includes("silver") || descLower.includes("grey")) {
-    colours.push({ name: "Soft Silver", hex: "#C5C7CB" });
+  if (combinedText.includes("silver") || combinedText.includes("grey")) {
+    colours.push({ name: "Silver Leaf", hex: "#C5C7CB" });
   }
 
-  // Fallback signature palette if no specific colour mentioned
+  // Fallback palette if none detected
   if (colours.length === 0) {
     colours.push(
       { name: "Rich Cocoa", hex: "#4A2E2B" },
       { name: "Warm Champagne", hex: "#EBDBC9" },
-      { name: "Ivory Silk", hex: "#FAF7F2" }
+      { name: "Warm Ivory", hex: "#FAF7F2" }
     );
   }
 
-  // Theme detection
-  let theme = "Modern Minimalist Elegance";
-  if (descLower.includes("floral") || descLower.includes("flower")) {
-    theme = "Botanical Floral Palette";
-  } else if (descLower.includes("vintage") || descLower.includes("retro") || descLower.includes("piping")) {
-    theme = "Victorian Vintage Piping";
-  } else if (descLower.includes("gold") || descLower.includes("royal") || descLower.includes("luxury")) {
-    theme = "Opulent Royal Metallic";
-  } else if (input.occasion === "Kids" || descLower.includes("cartoon") || descLower.includes("superhero")) {
-    theme = "Playful Handcrafted Sculpted";
-  } else if (input.occasion === "Wedding") {
-    theme = "Architectural Tiered Luxury";
+  // Theme resolution
+  let theme = input.styleTheme || "Modern Minimalist";
+  if (!input.styleTheme) {
+    if (combinedText.includes("floral") || combinedText.includes("flower")) {
+      theme = "Floral Botanical";
+    } else if (combinedText.includes("vintage") || combinedText.includes("retro") || combinedText.includes("piping")) {
+      theme = "Vintage Lambeth Piping";
+    } else if (combinedText.includes("gold") || combinedText.includes("royal") || combinedText.includes("luxury")) {
+      theme = "Royal Opulent Metallic";
+    } else if (input.occasion === "Kids" || combinedText.includes("cartoon") || combinedText.includes("superhero")) {
+      theme = "Playful Theme Sculpted";
+    } else if (input.occasion === "Wedding") {
+      theme = "Grand Tiered Elegance";
+    }
   }
 
-  // Title generation
+  const colourLabel = input.colourPreference?.trim() || colours.map((c) => c.name).join(" & ");
+
+  // Concept title
   const occasionTitle = input.occasion === "Other" ? "Celebration" : input.occasion;
   const conceptTitle = `${occasionTitle} Concept — ${input.flavour.split(" ")[0]} & ${colours[0].name}`;
 
-  // Design summary synthesis
-  const egglessText = input.eggless ? "100% vegetarian eggless sponge" : "artisanal sponge recipe";
-  const descText = input.description.trim() ? `highlighting your vision of "${input.description.trim()}"` : "with bespoke artisanal detailing";
-  const designSummary = `A custom-sculpted celebration design rendered in ${colours.map((c) => c.name).join(" and ")}, ${descText}. Constructed on a foundation of ${input.flavour} in ${egglessText}, sized at ${input.size.split(" ")[0]}. Hand-finished with crisp edges, balanced textures, and celebratory refinement by Cake Magic.`;
+  // Design summary
+  const egglessText = input.eggless ? "100% vegetarian eggless sponge" : "signature patisserie sponge";
+  const notesText = input.additionalNotes?.trim() ? `incorporating your notes on "${input.additionalNotes.trim()}"` : "with bespoke artisanal detailing";
+  const designSummary = `An artisanal celebration design rendered in ${colourLabel}, styled with ${theme} aesthetics, ${notesText}. Built upon a foundation of ${input.flavour} in ${egglessText}, sized at ${input.size.split(" ")[0]}. Hand-finished with crisp edges, balanced textures, and celebratory refinement by Cake Magic.`;
 
   return {
     id: `concept-${Date.now().toString(36)}`,
     title: conceptTitle,
     designSummary,
-    description: input.description,
     occasion: input.occasion,
     flavour: input.flavour,
     size: input.size,
+    eggless: input.eggless,
     theme,
+    colour: colourLabel,
     colours,
-    cakeMessage: input.cakeMessage.trim(),
+    cakeMessage: input.cakeMessage?.trim() || "",
+    deliveryDate: input.deliveryDate || "",
+    deliveryType: input.deliveryType || "Rajahmundry Delivery",
+    additionalNotes: input.additionalNotes?.trim() || "",
     referenceImage: input.referenceImage,
-    aiImageGenerated: false, // Architectural toggle for real image provider connection
+    aiImageGenerated: false, // Ready for real API connection; never faked
     aiImageUrl: null,
     createdAt: new Date().toISOString(),
   };

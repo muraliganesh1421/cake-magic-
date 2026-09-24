@@ -52,19 +52,19 @@ export default function ContactPage() {
           {/* Quick Action Contact Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* WhatsApp */}
-            <div className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs flex flex-col justify-between space-y-4">
+            <div className="p-6 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs flex flex-col justify-between space-y-4">
               <div className="space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-[var(--badge-eggless-bg)] text-[var(--success)] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-[var(--badge-eggless-bg)] text-[var(--badge-eggless-text)] flex items-center justify-center">
                   <MessageCircle className="w-5 h-5" />
                 </div>
                 <h2 className="font-serif text-lg font-bold text-[var(--foreground)]">
                   WhatsApp Ordering
                 </h2>
-                <p className="text-xs text-[var(--foreground-muted)]">
-                  Instant design consultations, photo sharing, price quotes, and delivery slots.
+                <p className="text-xs text-[var(--foreground-muted)] leading-relaxed">
+                  Design consultations, flavour suggestions, photo reference sharing, and delivery slot confirmations.
                 </p>
                 <div className="text-xs font-semibold text-[var(--foreground)] pt-1">
-                  {siteConfig.whatsappNumber}
+                  {siteConfig.hasOwnerPhone ? siteConfig.whatsappNumber : "Direct Messaging Available"}
                 </div>
               </div>
               <a
@@ -78,46 +78,58 @@ export default function ContactPage() {
               </a>
             </div>
 
-            {/* Direct Phone */}
-            <div className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs flex flex-col justify-between space-y-4">
+            {/* Direct Consultation / Store Contact */}
+            <div className="p-6 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs flex flex-col justify-between space-y-4">
               <div className="space-y-2">
                 <div className="w-10 h-10 rounded-xl bg-[var(--accent-blush-light)] text-[var(--primary)] flex items-center justify-center">
                   <Phone className="w-5 h-5" />
                 </div>
                 <h2 className="font-serif text-lg font-bold text-[var(--foreground)]">
-                  Call the Store
+                  Celebration Enquiries
                 </h2>
-                <p className="text-xs text-[var(--foreground-muted)]">
-                  Speak directly with our counter staff for immediate counter cake availability in Rajahmundry.
+                <p className="text-xs text-[var(--foreground-muted)] leading-relaxed">
+                  Discuss celebration themes, multi-tier wedding cakes, or immediate counter cake availability in Rajahmundry.
                 </p>
                 <div className="text-xs font-semibold text-[var(--foreground)] pt-1">
-                  {siteConfig.phone}
+                  {siteConfig.hasOwnerPhone ? siteConfig.phone : "Rajahmundry &bull; Serving Local Orders"}
                 </div>
               </div>
-              <a
-                href={`tel:${siteConfig.phone}`}
-                className="tap-target w-full py-2.5 rounded-xl border border-[var(--primary)] text-[var(--primary)] text-xs font-semibold hover:bg-[var(--surface-alt)] transition-all flex items-center justify-center gap-1.5"
-              >
-                <Phone className="w-3.5 h-3.5" />
-                <span>Call Store</span>
-              </a>
+              {siteConfig.hasOwnerPhone ? (
+                <a
+                  href={`tel:${siteConfig.phone}`}
+                  className="tap-target w-full py-2.5 rounded-xl border border-[var(--primary)] text-[var(--primary)] text-xs font-semibold hover:bg-[var(--surface-alt)] transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>Call Store</span>
+                </a>
+              ) : (
+                <a
+                  href={buildWhatsAppLink("Hi Cake Magic, I would like to consult about an upcoming celebration order in Rajahmundry.")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="tap-target w-full py-2.5 rounded-xl border border-[var(--primary)] text-[var(--primary)] text-xs font-semibold hover:bg-[var(--surface-alt)] transition-all flex items-center justify-center gap-1.5"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>Enquire Online</span>
+                </a>
+              )}
             </div>
 
             {/* Location & Directions */}
-            <div className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs flex flex-col justify-between space-y-4">
+            <div className="p-6 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs flex flex-col justify-between space-y-4">
               <div className="space-y-2">
                 <div className="w-10 h-10 rounded-xl bg-[var(--accent-champagne)]/60 text-[var(--foreground)] flex items-center justify-center">
                   <MapPin className="w-5 h-5" />
                 </div>
                 <h2 className="font-serif text-lg font-bold text-[var(--foreground)]">
-                  Visit Patisserie
+                  Location &amp; Delivery
                 </h2>
                 <p className="text-xs text-[var(--foreground-muted)]">
-                  {siteConfig.address}
+                  {siteConfig.hasOwnerAddress ? siteConfig.address : "Rajahmundry (Rajamahendravaram), Andhra Pradesh"}
                 </p>
                 <div className="text-xs text-[var(--foreground-muted)] pt-1 flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-[var(--primary)]" />
-                  <span>{siteConfig.openingHours}</span>
+                  <span>{siteConfig.hasOwnerHours ? siteConfig.openingHours : "Pre-orders open daily"}</span>
                 </div>
               </div>
               <a
@@ -167,7 +179,7 @@ export default function ContactPage() {
                     Cake Magic Patisserie
                   </h3>
                   <p className="text-xs text-[var(--foreground-muted)] mt-1 max-w-sm">
-                    {siteConfig.address}
+                    {siteConfig.hasOwnerAddress ? siteConfig.address : "Rajahmundry (Rajamahendravaram), Andhra Pradesh"}
                   </p>
                 </div>
                 <a

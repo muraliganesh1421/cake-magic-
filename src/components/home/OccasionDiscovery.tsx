@@ -52,7 +52,7 @@ export default function OccasionDiscovery() {
     <section className="py-16 md:py-24 bg-[var(--surface-alt)]/60 border-y border-[var(--surface-border)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs uppercase tracking-[0.25em] font-semibold text-[var(--foreground-muted)]">
+          <span className="text-xs uppercase tracking-[0.25em] font-semibold text-[var(--primary)]">
             Curated For Every Milestone
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--foreground)] mt-2">

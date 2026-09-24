@@ -187,10 +187,12 @@ export default function Header() {
               {/* Contact info inside drawer */}
               <div className="pt-4 space-y-3">
                 <div className="text-xs uppercase tracking-wider font-semibold text-[var(--foreground-muted)] px-3">
-                  Rajahmundry Store
+                  Rajahmundry Studio
                 </div>
                 <div className="text-xs text-[var(--foreground-muted)] px-3 leading-relaxed">
-                  {siteConfig.address}
+                  {siteConfig.hasOwnerAddress
+                    ? siteConfig.address
+                    : "Freshly baking for celebrations across Rajahmundry, Andhra Pradesh."}
                 </div>
                 <div className="px-3 flex flex-col gap-2 pt-2">
                   <a
@@ -202,13 +204,15 @@ export default function Header() {
                     <MessageCircle className="w-4 h-4 text-[var(--accent-blush)]" />
                     <span>WhatsApp Cake Magic</span>
                   </a>
-                  <a
-                    href={`tel:${siteConfig.phone}`}
-                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-[var(--surface-border)] text-[var(--foreground)] font-medium text-xs hover:bg-[var(--surface-alt)]"
-                  >
-                    <Phone className="w-3.5 h-3.5 text-[var(--foreground-muted)]" />
-                    <span>Call Store</span>
-                  </a>
+                  {siteConfig.hasOwnerPhone && (
+                    <a
+                      href={`tel:${siteConfig.phone}`}
+                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-[var(--surface-border)] text-[var(--foreground)] font-medium text-xs hover:bg-[var(--surface-alt)]"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-[var(--foreground-muted)]" />
+                      <span>Call Store</span>
+                    </a>
+                  )}
                 </div>
               </div>
             </div>

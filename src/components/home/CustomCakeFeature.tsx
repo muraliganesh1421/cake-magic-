@@ -80,12 +80,14 @@ export default function CustomCakeFeature() {
               <a
                 href={buildWhatsAppLink(WhatsAppTemplates.customCakeEnquiry({
                   occasion: "Birthday / Celebration",
-                  flavour: "Chocolate / Vanilla",
+                  flavour: "Belgian Chocolate / Red Velvet",
                   size: "1 kg",
                   eggless: "Yes",
+                  theme: "Bespoke Design",
+                  colour: "As desired",
                   date: "Upcoming",
                   deliveryType: "Pickup / Delivery",
-                  location: "Rajahmundry"
+                  notes: "Enquiry for custom cake in Rajahmundry",
                 }))}
                 target="_blank"
                 rel="noopener noreferrer"

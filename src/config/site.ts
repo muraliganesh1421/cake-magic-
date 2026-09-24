@@ -15,6 +15,9 @@ export interface SiteConfig {
   instagramHandle: string;
   instagramUrl: string;
   currency: string;
+  hasOwnerPhone: boolean;
+  hasOwnerAddress: boolean;
+  hasOwnerHours: boolean;
 }
 
 export const siteConfig: SiteConfig = {
@@ -24,17 +27,19 @@ export const siteConfig: SiteConfig = {
   locationState: "Andhra Pradesh",
   locationLabel: "Rajahmundry, Andhra Pradesh, India",
   
-  // Rule 2 compliant owner-verified placeholders
-  phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "[OWNER VERIFIED PHONE]",
-  whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "[OWNER VERIFIED WHATSAPP]",
-  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "[OWNER VERIFIED EMAIL]",
-  address: process.env.NEXT_PUBLIC_STORE_ADDRESS || "[OWNER VERIFIED ADDRESS, RAJAHMUNDRY]",
-  openingHours: process.env.NEXT_PUBLIC_OPENING_HOURS || "[OWNER VERIFIED HOURS]",
-  deliveryPolicy: "[OWNER VERIFIED DELIVERY POLICY]",
+  phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "",
+  whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "",
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "",
+  address: process.env.NEXT_PUBLIC_STORE_ADDRESS || "Rajahmundry, Andhra Pradesh",
+  openingHours: process.env.NEXT_PUBLIC_OPENING_HOURS || "Pre-orders & celebration enquiries open daily",
+  deliveryPolicy: "Fresh baking to order. Local delivery and store pickup available across Rajahmundry.",
   googleMapsDirectionsUrl: "https://maps.google.com/?q=Cake+Magic+Rajahmundry",
   instagramHandle: "@cakemagic_rajahmundry",
-  instagramUrl: "https://instagram.com/[OWNER_VERIFIED_INSTAGRAM]",
+  instagramUrl: process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://instagram.com",
   currency: "₹",
+  hasOwnerPhone: Boolean(process.env.NEXT_PUBLIC_CONTACT_PHONE && !process.env.NEXT_PUBLIC_CONTACT_PHONE.startsWith("[")),
+  hasOwnerAddress: Boolean(process.env.NEXT_PUBLIC_STORE_ADDRESS && !process.env.NEXT_PUBLIC_STORE_ADDRESS.startsWith("[")),
+  hasOwnerHours: Boolean(process.env.NEXT_PUBLIC_OPENING_HOURS && !process.env.NEXT_PUBLIC_OPENING_HOURS.startsWith("[")),
 };
 
 /**
@@ -42,9 +47,8 @@ export const siteConfig: SiteConfig = {
  */
 export function buildWhatsAppLink(message: string): string {
   const number = siteConfig.whatsappNumber;
-  const isPlaceholder = number.includes("[OWNER");
+  const isPlaceholder = !number || number.includes("[OWNER");
   
-  // If owner hasn't placed actual phone number yet, use generic api or alert-friendly fallback
   const cleanNumber = isPlaceholder ? "" : number.replace(/[^0-9]/g, "");
   const encodedText = encodeURIComponent(message);
   
@@ -64,21 +68,29 @@ export const WhatsAppTemplates = {
     flavour: string;
     size: string;
     eggless: string;
+    theme?: string;
+    colour?: string;
     message?: string;
-    date: string;
-    deliveryType: string;
-    location?: string;
+    date?: string;
+    deliveryType?: string;
+    notes?: string;
   }) => {
-    return `Hi Cake Magic, I'd like to enquire about a custom cake.
-
-Occasion: ${params.occasion}
-Flavour: ${params.flavour}
-Size: ${params.size}
-Eggless: ${params.eggless}
-Message: ${params.message || "None"}
-Date: ${params.date}
-Delivery/Pickup: ${params.deliveryType}
-Location: ${params.location || "Rajahmundry"}`;
+    return [
+      `Cake Magic Custom Cake Request`,
+      ``,
+      `Occasion: ${params.occasion}`,
+      `Flavour: ${params.flavour}`,
+      `Size: ${params.size}`,
+      `Eggless: ${params.eggless}`,
+      `Theme: ${params.theme || "Bespoke Patisserie"}`,
+      `Colour: ${params.colour || "Artisanal palette"}`,
+      `Message: ${params.message || "None"}`,
+      `Preferred Date: ${params.date || "To be confirmed"}`,
+      `Delivery/Pickup: ${params.deliveryType || "Rajahmundry Delivery / Pickup"}`,
+      params.notes ? `Additional Notes: ${params.notes}` : `Additional Notes: None`,
+      ``,
+      `Please confirm availability and final pricing.`,
+    ].join("\n");
   },
   todayAvailability: () => {
     return "Hi Cake Magic, I'd like to know about today's fresh cakes and immediate counter availability in Rajahmundry.";
