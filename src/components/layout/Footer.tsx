@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { siteConfig, buildWhatsAppLink, WhatsAppTemplates } from "@/config/site";
 import { MapPin, Phone, Clock, MessageCircle, Heart, ShieldCheck } from "lucide-react";
 
@@ -9,13 +10,24 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
           {/* Brand & Positioning */}
           <div className="lg:col-span-2 space-y-4">
-            <Link href="/" className="inline-block">
-              <span className="font-serif text-2xl md:text-3xl font-bold tracking-wider uppercase text-[var(--primary)]">
-                Cake Magic
-              </span>
-              <span className="block text-xs uppercase tracking-[0.2em] text-[var(--foreground-muted)] font-medium mt-1">
-                Bespoke Cakes &bull; Rajahmundry
-              </span>
+            <Link href="/" className="inline-flex items-center gap-3.5 group">
+              <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden border border-[var(--surface-border-strong)]/60 shadow-xs shrink-0 bg-[#F9F6F0]">
+                <Image
+                  src="/logo.jpg"
+                  alt="Cake Magic Logo"
+                  fill
+                  sizes="56px"
+                  className="object-contain p-0.5 group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <div>
+                <span className="font-serif text-2xl md:text-3xl font-bold tracking-wider uppercase text-[var(--primary)] leading-none block">
+                  Cake Magic
+                </span>
+                <span className="block text-xs uppercase tracking-[0.2em] text-[var(--foreground-muted)] font-medium mt-1">
+                  Bespoke Cakes &bull; Rajahmundry
+                </span>
+              </div>
             </Link>
             <p className="text-sm text-[var(--foreground-muted)] leading-relaxed max-w-sm">
               Artisanal patisserie crafting celebration cakes, designer bento boxes, eggless creations, and daily fresh bakery treats in Rajahmundry, Andhra Pradesh.

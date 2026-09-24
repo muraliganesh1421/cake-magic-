@@ -66,14 +66,26 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-6 relative aspect-4/3 rounded-3xl overflow-hidden shadow-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]">
-            <Image
-              src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=1200&auto=format&fit=crop"
-              alt="Cake Magic artisan kitchen baking in Rajahmundry"
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 600px"
-            />
+          <div className="lg:col-span-6 relative">
+            <div className="relative aspect-4/3 rounded-3xl overflow-hidden shadow-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]">
+              <Image
+                src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=1200&auto=format&fit=crop"
+                alt="Cake Magic artisan kitchen baking in Rajahmundry"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 600px"
+              />
+            </div>
+            {/* Official Logo Brand Seal */}
+            <div className="absolute -bottom-6 -left-6 w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-[var(--surface)] shadow-2xl bg-[#F9F6F0] z-10 hidden sm:block">
+              <Image
+                src="/logo.jpg"
+                alt="Cake Magic Official Insignia"
+                fill
+                sizes="112px"
+                className="object-contain p-1.5"
+              />
+            </div>
           </div>
         </div>
 

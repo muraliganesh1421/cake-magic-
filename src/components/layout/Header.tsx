@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Search, Menu, X, MessageCircle, Sparkles, ChevronRight, Phone } from "lucide-react";
 import { siteConfig, buildWhatsAppLink, WhatsAppTemplates } from "@/config/site";
@@ -40,14 +41,26 @@ export default function Header() {
             {/* Brand Logo */}
             <Link
               href="/"
-              className="flex flex-col items-start focus-visible:outline-2 focus-visible:outline-[var(--primary)] rounded-md py-1"
+              className="flex items-center gap-2.5 sm:gap-3 focus-visible:outline-2 focus-visible:outline-[var(--primary)] rounded-md py-1 group"
             >
-              <span className="font-serif text-2xl md:text-3xl tracking-wider font-bold text-[var(--foreground)] uppercase leading-none">
-                Cake Magic
-              </span>
-              <span className="text-[9px] md:text-[10px] tracking-[0.25em] text-[var(--foreground-muted)] uppercase font-sans font-medium mt-1">
-                Bespoke Patisserie &bull; Rajahmundry
-              </span>
+              <div className="relative w-11 h-11 md:w-12 md:h-12 rounded-full overflow-hidden border border-[var(--surface-border)] shadow-xs shrink-0 bg-[#F9F6F0]">
+                <Image
+                  src="/logo.jpg"
+                  alt="Cake Magic Logo"
+                  fill
+                  sizes="48px"
+                  className="object-contain p-0.5 group-hover:scale-105 transition-transform duration-300"
+                  priority
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-serif text-xl sm:text-2xl md:text-2xl tracking-wider font-bold text-[var(--foreground)] uppercase leading-none">
+                  Cake Magic
+                </span>
+                <span className="text-[9px] md:text-[10px] tracking-[0.2em] text-[var(--foreground-muted)] uppercase font-sans font-medium mt-1">
+                  Bespoke Patisserie &bull; Rajahmundry
+                </span>
+              </div>
             </Link>
 
             {/* Desktop Navigation */}
@@ -122,6 +135,27 @@ export default function Header() {
               className="bg-[var(--surface)] border-b border-[var(--surface-border)] px-5 py-6 shadow-2xl overflow-y-auto max-h-[85vh] divide-y divide-[var(--surface-border)]/60"
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Mobile Drawer Brand Header */}
+              <div className="flex items-center gap-3 pb-4 mb-2">
+                <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[var(--surface-border)] shadow-xs shrink-0 bg-[#F9F6F0]">
+                  <Image
+                    src="/logo.jpg"
+                    alt="Cake Magic Logo"
+                    fill
+                    sizes="48px"
+                    className="object-contain p-0.5"
+                  />
+                </div>
+                <div>
+                  <span className="font-serif text-lg font-bold text-[var(--foreground)] uppercase leading-none block">
+                    Cake Magic
+                  </span>
+                  <span className="text-[10px] tracking-wider text-[var(--foreground-muted)] uppercase font-sans font-medium">
+                    Rajahmundry &bull; Patisserie
+                  </span>
+                </div>
+              </div>
+
               <div className="space-y-1 pb-4">
                 {navLinks.map((link) => {
                   const isActive = pathname === link.href;

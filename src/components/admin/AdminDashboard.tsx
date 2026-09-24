@@ -210,7 +210,17 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-[75vh] flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md bg-[var(--surface)] p-8 rounded-3xl border border-[var(--surface-border)] shadow-xl text-center space-y-6">
-          <div>
+          <div className="flex flex-col items-center">
+            <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[var(--surface-border-strong)]/60 shadow-md mb-3 bg-[#F9F6F0]">
+              <Image
+                src="/logo.jpg"
+                alt="Cake Magic Logo"
+                fill
+                sizes="80px"
+                className="object-contain p-1"
+                priority
+              />
+            </div>
             <span className="font-serif text-2xl font-bold uppercase tracking-wider text-[var(--foreground)]">
               Cake Magic
             </span>
@@ -266,13 +276,24 @@ export default function AdminDashboard() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[var(--surface-border)]">
-        <div>
-          <span className="text-xs uppercase tracking-widest font-semibold text-[var(--foreground-muted)]">
-            Store Administration &bull; Rajahmundry
-          </span>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[var(--foreground)] mt-0.5">
-            Cake Magic Management Hub
-          </h1>
+        <div className="flex items-center gap-3.5">
+          <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[var(--surface-border-strong)]/60 shadow-xs shrink-0 bg-[#F9F6F0]">
+            <Image
+              src="/logo.jpg"
+              alt="Cake Magic Logo"
+              fill
+              sizes="48px"
+              className="object-contain p-0.5"
+            />
+          </div>
+          <div>
+            <span className="text-xs uppercase tracking-widest font-semibold text-[var(--foreground-muted)]">
+              Store Administration &bull; Rajahmundry
+            </span>
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[var(--foreground)] mt-0.5">
+              Cake Magic Management Hub
+            </h1>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
