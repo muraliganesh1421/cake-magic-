@@ -30,8 +30,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
   useEffect(() => {
     if (!query.trim()) {
-      setResults([]);
-      return;
+      const emptyTimer = setTimeout(() => setResults([]), 0);
+      return () => clearTimeout(emptyTimer);
     }
 
     const timer = setTimeout(async () => {

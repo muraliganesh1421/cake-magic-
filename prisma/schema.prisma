@@ -1,0 +1,285 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  OWNER
+  STAFF
+}
+
+enum DutyStatus {
+  ON_DUTY
+  OFF_DUTY
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  CONFIRMED
+  PREPARING
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  REFUND_PENDING
+  REFUNDED
+}
+
+enum DeliveryType {
+  DELIVERY
+  PICKUP
+}
+
+enum CustomRequestStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  QUOTE_PROVIDED
+  CUSTOMER_APPROVED
+  ORDER_CREATED
+  REJECTED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+model BusinessSettings {
+  id                    String   @id @default("default")
+  businessName          String   @default("Cake Magic")
+  tagline               String   @default("Bespoke cakes & bakery creations in Rajahmundry")
+  phone                 String?
+  whatsapp              String?
+  email                 String?
+  address               String?
+  googleMapsUrl         String?
+  openingHours          String?
+  deliveryAreas         String?
+  deliveryCharge        Decimal  @default(50.0) @db.Decimal(10, 2)
+  freeDeliveryThreshold Decimal? @db.Decimal(10, 2)
+  minPreparationHours   Int      @default(24)
+  acceptingOrders       Boolean  @default(true)
+  customOrdersEnabled   Boolean  @default(true)
+  logoUrl               String?
+  currency              String   @default("₹")
+  updatedAt             DateTime @updatedAt
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(STAFF)
+  active       Boolean  @default(true)
+  staffProfile Staff?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Staff {
+  id               String       @id @default(cuid())
+  name             String
+  phone            String       @unique
+  role             String       @default("BAKER")
+  dutyStatus       DutyStatus   @default(OFF_DUTY)
+  active           Boolean      @default(true)
+  activeOrderCount Int          @default(0)
+  adminId          String?      @unique
+  admin            Admin?       @relation(fields: [adminId], references: [id])
+  shifts           StaffShift[]
+  assignedOrders   Order[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model StaffShift {
+  id        String    @id @default(cuid())
+  staffId   String
+  staff     Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+}
+
+model Category {
+  id           String    @id @default(cuid())
+  name         String    @unique
+  slug         String    @unique
+  description  String?
+  displayOrder Int       @default(0)
+  active       Boolean   @default(true)
+  products     Product[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([slug])
+}
+
+model Product {
+  id                   String      @id @default(cuid())
+  name                 String
+  slug                 String      @unique
+  description          String
+  categoryId           String
+  category             Category    @relation(fields: [categoryId], references: [id])
+  subcategory          String?
+  images               String[]
+  flavours             String[]
+  sizes                String[]
+  startingPrice        Decimal?    @db.Decimal(10, 2)
+  eggless              Boolean     @default(true)
+  customizable         Boolean     @default(true)
+  availableToday       Boolean     @default(false)
+  advanceOrderRequired Boolean     @default(true)
+  featured             Boolean     @default(false)
+  active               Boolean     @default(true)
+  displayOrder         Int         @default(0)
+  orderItems           OrderItem[]
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  @@index([slug])
+  @@index([categoryId])
+}
+
+model Customer {
+  id             String                 @id @default(cuid())
+  name           String
+  phone          String                 @unique
+  email          String?
+  defaultAddress String?
+  orders         Order[]
+  customRequests CustomizationRequest[]
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  @@index([phone])
+}
+
+model Order {
+  id                  String               @id @default(cuid())
+  orderNumber         String               @unique
+  customerId          String
+  customer            Customer             @relation(fields: [customerId], references: [id])
+  status              OrderStatus          @default(PENDING_PAYMENT)
+  deliveryType        DeliveryType         @default(DELIVERY)
+  deliveryAddress     String?
+  landmark            String?
+  deliveryDate        DateTime
+  deliveryTimeSlot    String?
+  specialInstructions String?
+  subtotal            Decimal              @db.Decimal(10, 2)
+  deliveryFee         Decimal              @default(0) @db.Decimal(10, 2)
+  discount            Decimal              @default(0) @db.Decimal(10, 2)
+  totalAmount         Decimal              @db.Decimal(10, 2)
+  assignedStaffId     String?
+  assignedStaff       Staff?               @relation(fields: [assignedStaffId], references: [id])
+  items               OrderItem[]
+  payments            Payment[]
+  statusHistory       OrderStatusHistory[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@index([orderNumber])
+  @@index([status])
+  @@index([deliveryDate])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+  productName String
+  flavour     String?
+  size        String?
+  eggless     Boolean  @default(true)
+  cakeMessage String?
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  quantity    Int      @default(1)
+  totalPrice  Decimal  @db.Decimal(10, 2)
+}
+
+model CustomizationRequest {
+  id                String              @id @default(cuid())
+  requestNumber     String              @unique
+  customerId        String
+  customer          Customer            @relation(fields: [customerId], references: [id])
+  occasion          String
+  flavour           String
+  weight            String
+  shape             String?
+  eggless           Boolean             @default(true)
+  theme             String?
+  colourPalette     String?
+  cakeMessage       String?
+  referenceImageUrl String?
+  deliveryDate      DateTime
+  deliveryTimeSlot  String?
+  deliveryType      DeliveryType        @default(DELIVERY)
+  deliveryAddress   String?
+  notes             String?
+  status            CustomRequestStatus @default(SUBMITTED)
+  quotedPrice       Decimal?            @db.Decimal(10, 2)
+  quoteNotes        String?
+  orderId           String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([requestNumber])
+  @@index([status])
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  orderId         String
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  gateway         String        @default("PENDING_PROVIDER")
+  transactionId   String?       @unique
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("INR")
+  status          PaymentStatus @default(PENDING)
+  gatewayResponse String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([transactionId])
+  @@index([status])
+}
+
+model OrderStatusHistory {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus String?
+  toStatus   String
+  note       String?
+  updatedBy  String?
+  createdAt  DateTime @default(now())
+
+  @@index([orderId])
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  orderId   String?
+  channel   String
+  recipient String?
+  event     String
+  status    String
+  error     String?
+  payload   String?
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([channel])
+}

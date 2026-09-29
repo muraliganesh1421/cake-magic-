@@ -95,3 +95,95 @@ export interface CustomerReview {
   verified: boolean;
   active: boolean;
 }
+
+// -------------------------------------------------------------
+// Production Order Management & Architecture Types (Phase 1+)
+// -------------------------------------------------------------
+
+export type OrderStatusType =
+  | "PENDING_PAYMENT"
+  | "PAID"
+  | "CONFIRMED"
+  | "PREPARING"
+  | "READY"
+  | "OUT_FOR_DELIVERY"
+  | "DELIVERED"
+  | "CANCELLED"
+  | "REFUND_PENDING"
+  | "REFUNDED";
+
+export type DeliveryMethod = "DELIVERY" | "PICKUP";
+
+export type StaffRole = "BAKER" | "DECORATOR" | "PACKER" | "DISPATCHER";
+export type DutyStatusType = "ON_DUTY" | "OFF_DUTY";
+
+export interface CartItem {
+  id: string;
+  productId: string;
+  name: string;
+  slug: string;
+  image: string;
+  flavour?: string;
+  size?: string;
+  eggless: boolean;
+  cakeMessage?: string;
+  unitPrice: number;
+  quantity: number;
+  totalPrice: number;
+}
+
+export interface OrderItemRecord {
+  id: string;
+  productId?: string | null;
+  productName: string;
+  flavour?: string | null;
+  size?: string | null;
+  eggless: boolean;
+  cakeMessage?: string | null;
+  unitPrice: number;
+  quantity: number;
+  totalPrice: number;
+}
+
+export interface OrderRecord {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  status: OrderStatusType;
+  deliveryType: DeliveryMethod;
+  deliveryAddress?: string | null;
+  landmark?: string | null;
+  deliveryDate: string;
+  deliveryTimeSlot?: string | null;
+  specialInstructions?: string | null;
+  subtotal: number;
+  deliveryFee: number;
+  discount: number;
+  totalAmount: number;
+  assignedStaffId?: string | null;
+  assignedStaffName?: string | null;
+  items: OrderItemRecord[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BusinessSettingsData {
+  businessName: string;
+  tagline: string;
+  phone?: string | null;
+  whatsapp?: string | null;
+  email?: string | null;
+  address?: string | null;
+  googleMapsUrl?: string | null;
+  openingHours?: string | null;
+  deliveryAreas?: string | null;
+  deliveryCharge: number;
+  freeDeliveryThreshold?: number | null;
+  minPreparationHours: number;
+  acceptingOrders: boolean;
+  customOrdersEnabled: boolean;
+  logoUrl?: string | null;
+  currency: string;
+}
+

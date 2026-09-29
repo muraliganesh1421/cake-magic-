@@ -869,7 +869,10 @@ export default function AdminDashboard() {
                       : editingProduct.flavours || ""
                   }
                   onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, flavours: e.target.value as any })
+                    setEditingProduct({
+                      ...editingProduct,
+                      flavours: e.target.value.split(",").map((s) => s.trim()),
+                    })
                   }
                   placeholder="e.g. Belgian Truffle, Dark Chocolate"
                   className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
@@ -886,7 +889,10 @@ export default function AdminDashboard() {
                       : editingProduct.sizes || ""
                   }
                   onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, sizes: e.target.value as any })
+                    setEditingProduct({
+                      ...editingProduct,
+                      sizes: e.target.value.split(",").map((s) => s.trim()),
+                    })
                   }
                   placeholder="e.g. 500 g, 1 kg, 2 kg"
                   className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
