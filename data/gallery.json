@@ -1,0 +1,82 @@
+[
+  {
+    "id": "gal-1",
+    "title": "Enchanted Pastel Floral Two-Tier Cake",
+    "image": "https://images.unsplash.com/photo-1535141192574-5d4897c13136?q=80&w=1080&auto=format&fit=crop",
+    "category": "Wedding",
+    "flavour": "Vanilla Bean & White Chocolate Ganache",
+    "occasion": "Wedding Reception",
+    "featured": true,
+    "createdAt": "2026-02-14"
+  },
+  {
+    "id": "gal-2",
+    "title": "Safari Jungle Adventure 1st Birthday Cake",
+    "image": "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?q=80&w=1080&auto=format&fit=crop",
+    "category": "Kids",
+    "flavour": "Belgian Chocolate Truffle",
+    "occasion": "1st Birthday Celebration",
+    "featured": true,
+    "createdAt": "2026-03-01"
+  },
+  {
+    "id": "gal-3",
+    "title": "Minimalist Korean Aesthetic Bento Cake",
+    "image": "https://images.unsplash.com/photo-1621303837174-89787a7d4729?q=80&w=1080&auto=format&fit=crop",
+    "category": "Bento",
+    "flavour": "Strawberry Shortcake",
+    "occasion": "Anniversary Celebration",
+    "featured": true,
+    "createdAt": "2026-03-10"
+  },
+  {
+    "id": "gal-4",
+    "title": "Rustic Textured Golden Anniversary Tier",
+    "image": "https://images.unsplash.com/photo-1519869325930-281384150729?q=80&w=1080&auto=format&fit=crop",
+    "category": "Anniversary",
+    "flavour": "Pistachio Rose & White Chocolate",
+    "occasion": "25th Silver Jubilee",
+    "featured": true,
+    "createdAt": "2026-02-28"
+  },
+  {
+    "id": "gal-5",
+    "title": "Handcrafted 3D Spiderman Themed Creation",
+    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=1080&auto=format&fit=crop",
+    "category": "Kids",
+    "flavour": "Butterscotch Praline",
+    "occasion": "5th Birthday Party",
+    "featured": false,
+    "createdAt": "2026-03-15"
+  },
+  {
+    "id": "gal-6",
+    "title": "Contemporary Geometric Sculpted Designer Cake",
+    "image": "https://images.unsplash.com/photo-1586788680434-30d324b2d46f?q=80&w=1080&auto=format&fit=crop",
+    "category": "Designer",
+    "flavour": "Lotus Biscoff Speculoos",
+    "occasion": "Milestone Birthday",
+    "featured": true,
+    "createdAt": "2026-03-18"
+  },
+  {
+    "id": "gal-7",
+    "title": "Luminescent Pearl Edible Photo Cake",
+    "image": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?q=80&w=1080&auto=format&fit=crop",
+    "category": "Photo Cakes",
+    "flavour": "Classic Black Forest Royale",
+    "occasion": "Farewell & Graduation",
+    "featured": false,
+    "createdAt": "2026-03-20"
+  },
+  {
+    "id": "gal-8",
+    "title": "Royal Grandeur Tiered Celebration Gateau",
+    "image": "https://images.unsplash.com/photo-1542826438-bd32f43d626f?q=80&w=1080&auto=format&fit=crop",
+    "category": "Celebrations",
+    "flavour": "Belgian Dark Truffle",
+    "occasion": "Corporate Gala & New Year",
+    "featured": true,
+    "createdAt": "2026-01-01"
+  }
+]

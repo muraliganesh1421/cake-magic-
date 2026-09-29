@@ -1,0 +1,128 @@
+[
+  {
+    "customerName": "Ramesh Babu",
+    "customerPhone": "9848181144",
+    "status": "DELIVERED",
+    "deliveryType": "DELIVERY",
+    "deliveryAddress": "Near Abhaya Clinic, Srinivas Nagar, Rajahmundry",
+    "deliveryDate": "2026-09-30T10:06:10.556Z",
+    "deliveryTimeSlot": "Evening (5 PM – 7 PM)",
+    "specialInstructions": "Please write 'Happy 50th Birthday Dad'",
+    "subtotal": 1250,
+    "deliveryFee": 50,
+    "discount": 0,
+    "totalAmount": 1300,
+    "items": [
+      {
+        "id": "item-e2e-1",
+        "productName": "Belgian Chocolate Truffle Cake",
+        "flavour": "Belgian Dark Chocolate",
+        "size": "1.5 kg",
+        "eggless": true,
+        "cakeMessage": "Happy 50th Birthday Dad",
+        "unitPrice": 1250,
+        "quantity": 1,
+        "totalPrice": 1250
+      }
+    ],
+    "id": "CM-20260929-004",
+    "orderNumber": "CM-20260929-004",
+    "assignedStaffId": "staff-1",
+    "assignedStaffName": "Master Baker Ramesh",
+    "createdAt": "2026-09-29T10:06:10.558Z",
+    "updatedAt": "2026-09-29T10:06:10.569Z"
+  },
+  {
+    "customerName": "Integration Test Customer",
+    "customerPhone": "9848099999",
+    "status": "PREPARING",
+    "deliveryType": "DELIVERY",
+    "deliveryAddress": "Danavaipeta, Rajahmundry",
+    "deliveryDate": "2026-09-30T09:07:40.596Z",
+    "deliveryTimeSlot": "Morning (9 AM – 11 AM)",
+    "subtotal": 950,
+    "deliveryFee": 50,
+    "discount": 0,
+    "totalAmount": 1000,
+    "items": [
+      {
+        "id": "item-test-1",
+        "productName": "Dutch Chocolate Truffle Cake",
+        "flavour": "Belgian Chocolate",
+        "size": "1 kg",
+        "eggless": true,
+        "unitPrice": 950,
+        "quantity": 1,
+        "totalPrice": 950
+      }
+    ],
+    "id": "CM-20260929-003",
+    "orderNumber": "CM-20260929-003",
+    "assignedStaffId": "staff-2",
+    "assignedStaffName": "Suresh (Cake Stylist)",
+    "createdAt": "2026-09-29T09:07:40.598Z",
+    "updatedAt": "2026-09-29T09:07:40.606Z"
+  },
+  {
+    "customerName": "Integration Test Customer",
+    "customerPhone": "9848099999",
+    "status": "PREPARING",
+    "deliveryType": "DELIVERY",
+    "deliveryAddress": "Danavaipeta, Rajahmundry",
+    "deliveryDate": "2026-09-30T08:44:37.869Z",
+    "deliveryTimeSlot": "Morning (9 AM – 11 AM)",
+    "subtotal": 950,
+    "deliveryFee": 50,
+    "discount": 0,
+    "totalAmount": 1000,
+    "items": [
+      {
+        "id": "item-test-1",
+        "productName": "Dutch Chocolate Truffle Cake",
+        "flavour": "Belgian Chocolate",
+        "size": "1 kg",
+        "eggless": true,
+        "unitPrice": 950,
+        "quantity": 1,
+        "totalPrice": 950
+      }
+    ],
+    "id": "CM-20260929-002",
+    "orderNumber": "CM-20260929-002",
+    "assignedStaffId": "staff-2",
+    "assignedStaffName": "Suresh (Cake Stylist)",
+    "createdAt": "2026-09-29T08:44:37.873Z",
+    "updatedAt": "2026-09-29T08:44:37.885Z"
+  },
+  {
+    "customerName": "Integration Test Customer",
+    "customerPhone": "9848099999",
+    "status": "CONFIRMED",
+    "deliveryType": "DELIVERY",
+    "deliveryAddress": "Danavaipeta, Rajahmundry",
+    "deliveryDate": "2026-09-30T08:43:03.237Z",
+    "deliveryTimeSlot": "Morning (9 AM – 11 AM)",
+    "subtotal": 950,
+    "deliveryFee": 50,
+    "discount": 0,
+    "totalAmount": 1000,
+    "items": [
+      {
+        "id": "item-test-1",
+        "productName": "Dutch Chocolate Truffle Cake",
+        "flavour": "Belgian Chocolate",
+        "size": "1 kg",
+        "eggless": true,
+        "unitPrice": 950,
+        "quantity": 1,
+        "totalPrice": 950
+      }
+    ],
+    "id": "CM-20260929-001",
+    "orderNumber": "CM-20260929-001",
+    "assignedStaffId": "staff-1",
+    "assignedStaffName": "Master Baker Ramesh",
+    "createdAt": "2026-09-29T08:43:03.240Z",
+    "updatedAt": "2026-09-29T08:43:03.240Z"
+  }
+]

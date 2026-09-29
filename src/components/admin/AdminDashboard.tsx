@@ -519,9 +519,10 @@ export default function AdminDashboard() {
       const q = orderSearch.toLowerCase().trim();
       const matchesSearch =
         !q ||
-        o.id.toLowerCase().includes(q) ||
-        o.customerName.toLowerCase().includes(q) ||
-        o.customerPhone.includes(q);
+        (o.id && o.id.toLowerCase().includes(q)) ||
+        (o.orderNumber && o.orderNumber.toLowerCase().includes(q)) ||
+        (o.customerName && o.customerName.toLowerCase().includes(q)) ||
+        (o.customerPhone && o.customerPhone.includes(q));
       return matchesStatus && matchesSearch;
     });
   }, [orders, orderStatusFilter, orderSearch]);
@@ -915,8 +916,24 @@ export default function AdminDashboard() {
               </select>
             </div>
 
-            <div className="text-xs text-[var(--foreground-muted)] font-semibold">
-              Showing {filteredOrders.length} of {orders.length} orders
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  fetch("/api/orders")
+                    .then((r) => r.json())
+                    .then((data) => setOrders(Array.isArray(data) ? data : []))
+                    .catch(() => null);
+                }}
+                className="tap-target px-3 py-1.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface)] hover:bg-[var(--surface-alt)] text-xs font-semibold text-[var(--foreground)] flex items-center gap-1.5 transition-colors shadow-xs"
+                title="Refresh orders from server"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+                <span>Refresh Orders</span>
+              </button>
+              <div className="text-xs text-[var(--foreground-muted)] font-semibold">
+                Showing {filteredOrders.length} of {orders.length} orders
+              </div>
             </div>
           </div>
 

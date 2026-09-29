@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { siteConfig, buildWhatsAppLink } from "@/config/site";
 import {
   Package,
   Search,
@@ -72,50 +73,65 @@ function TrackingForm({
   const [phone, setPhone] = useState(initialPhone);
   const [loading, setLoading] = useState(false);
 
+  const fetchOrder = useCallback(
+    async (oid: string, ph?: string) => {
+      if (!oid.trim()) return;
+      setLoading(true);
+      try {
+        const cleanPhone = (ph || "").trim().replace(/\D/g, "");
+        const url = cleanPhone
+          ? `/api/orders/track?order=${encodeURIComponent(oid.trim().toUpperCase())}&phone=${encodeURIComponent(cleanPhone)}`
+          : `/api/orders/track?order=${encodeURIComponent(oid.trim().toUpperCase())}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!res.ok) {
+          onResult(null, data.error || "Order not found. Please check your order number.");
+        } else {
+          onResult(data, "");
+        }
+      } catch {
+        onResult(null, "Network error. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [onResult]
+  );
+
+  useEffect(() => {
+    if (initialOrder && initialOrder.trim()) {
+      fetchOrder(initialOrder, initialPhone);
+    }
+  }, [initialOrder, initialPhone, fetchOrder]);
+
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    if (!orderId.trim() || !phone.trim()) return;
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `/api/orders/track?order=${encodeURIComponent(orderId.trim().toUpperCase())}&phone=${encodeURIComponent(phone.trim().replace(/\D/g, ""))}`
-      );
-      const data = await res.json();
-      if (!res.ok) {
-        onResult(null, data.error || "Order not found. Please check your details.");
-      } else {
-        onResult(data, "");
-      }
-    } catch {
-      onResult(null, "Network error. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    if (!orderId.trim()) return;
+    fetchOrder(orderId, phone);
   }
 
   return (
     <form onSubmit={handleSearch} className="space-y-4">
       <div>
         <label className="block text-xs font-semibold text-[var(--foreground-muted)] mb-1.5">
-          Order Number
+          Order Number *
         </label>
         <input
           type="text"
           required
           value={orderId}
           onChange={(e) => setOrderId(e.target.value.toUpperCase())}
-          placeholder="e.g. CM-20241215-001"
+          placeholder="e.g. CM-20260929-001"
           className="w-full text-sm p-3 rounded-xl border border-[var(--surface-border)] bg-[var(--background)] text-[var(--foreground)] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--primary)] placeholder:text-[var(--foreground-muted)] placeholder:font-sans"
         />
       </div>
       <div>
         <label className="block text-xs font-semibold text-[var(--foreground-muted)] mb-1.5">
           <Phone className="w-3 h-3 inline mr-1" />
-          Mobile Number (used when ordering)
+          Mobile Number (Optional verification)
         </label>
         <input
           type="tel"
-          required
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="10-digit mobile number"
@@ -125,7 +141,7 @@ function TrackingForm({
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3.5 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] font-bold text-sm hover:bg-[var(--primary-hover)] transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+        className="w-full py-3.5 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] font-bold text-sm hover:bg-[var(--primary-hover)] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 shadow-xs"
       >
         <Search className="w-4 h-4" />
         {loading ? "Tracking…" : "Track Order"}
@@ -277,7 +293,7 @@ function OrderResult({ order }: { order: OrderData }) {
       <div className="text-center text-xs text-[var(--foreground-muted)]">
         Need help?{" "}
         <a
-          href="https://wa.me/919876543210?text=Hi%20Cake%20Magic%2C%20I%20need%20help%20with%20my%20order"
+          href={buildWhatsAppLink(`Hi Cake Magic, I need assistance with my order ${order.id}.`)}
           target="_blank"
           rel="noopener noreferrer"
           className="text-[var(--primary)] font-semibold hover:underline"

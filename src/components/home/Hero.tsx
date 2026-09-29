@@ -1,104 +1,99 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, Clock, MapPin, Search } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="relative bg-[var(--background)] pt-8 pb-14 md:pt-16 md:pb-20">
+    <section className="relative bg-[var(--background)] pt-6 pb-10 md:pt-10 md:pb-14 border-b border-[var(--surface-border)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-          {/* Left Editorial Text Column */}
-          <div className="lg:col-span-6 space-y-6 text-left">
-            {/* Brand Eyebrow */}
-            <div className="space-y-1">
-              <span className="text-xs uppercase tracking-[0.28em] font-semibold text-[var(--primary)] block">
-                Cake Magic
-              </span>
-              <span className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-[var(--foreground-muted)] font-medium block">
-                Bespoke Cakes &amp; Bakery Creations &bull; Rajahmundry
-              </span>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          {/* Left Text Column */}
+          <div className="lg:col-span-7 space-y-4 text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-alt)] border border-[var(--surface-border)] text-xs text-[var(--foreground-muted)] font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+              <span>Freshly Baking Daily in Rajahmundry &bull; Est. 2015</span>
             </div>
 
-            {/* Headline */}
-            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-[var(--foreground)] leading-[1.12]">
-              Your Celebration <br />
-              <span className="italic font-normal text-[var(--primary)]">
-                Deserves Its Own Cake.
-              </span>
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[var(--foreground)] leading-tight">
+              Make Every Celebration <br className="hidden sm:inline" />
+              <span className="text-[var(--primary)] italic font-normal">Sweeter.</span>
             </h1>
 
-            {/* Supporting Text */}
-            <p className="text-base sm:text-lg text-[var(--foreground-muted)] max-w-lg leading-relaxed">
-              Handcrafted celebration cakes, bespoke creations and fresh patisserie, baked for life&apos;s sweetest moments in Rajahmundry.
+            <p className="text-sm sm:text-base text-[var(--foreground-muted)] max-w-xl leading-relaxed">
+              Fresh cakes, custom cakes &amp; desserts in Rajahmundry. Baked to order with 100% eggless options, same-day delivery, and doorstep fulfillment.
             </p>
 
-            {/* Exactly 3 Primary Actions (Section 4 Master Rule) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+            {/* Quick Action CTAs */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <Link
                 href="/cakes"
-                className="tap-target px-7 py-3.5 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] text-sm font-semibold hover:bg-[var(--primary-hover)] transition-colors shadow-xs flex items-center justify-center gap-2 group"
+                className="tap-target px-6 py-3 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] text-xs sm:text-sm font-semibold hover:bg-[var(--primary-hover)] transition-all shadow-xs flex items-center gap-2 group"
               >
-                <span>ORDER NOW</span>
+                <span>Shop Cakes</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
 
               <Link
                 href="/custom-cakes"
-                className="tap-target px-6 py-3.5 rounded-xl bg-[var(--surface)] border border-[var(--surface-border-strong)] text-[var(--foreground)] text-sm font-semibold hover:bg-[var(--surface-alt)] transition-colors flex items-center justify-center gap-2"
+                className="tap-target px-5 py-3 rounded-xl bg-[var(--surface)] border border-[var(--surface-border)] hover:bg-[var(--surface-alt)] text-[var(--foreground)] text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 shadow-xs"
               >
-                <Sparkles className="w-4 h-4 text-[var(--accent)]" />
-                <span>CUSTOMIZE YOUR CAKE</span>
+                <Sparkles className="w-4 h-4 text-[var(--accent-blush-dark)]" />
+                <span>Custom Cakes</span>
               </Link>
 
               <Link
                 href="/track"
-                className="tap-target px-5 py-3.5 rounded-xl bg-[var(--surface-alt)] border border-[var(--surface-border)] text-[var(--foreground)] text-sm font-semibold hover:bg-[var(--surface-border)]/50 transition-colors flex items-center justify-center gap-1.5"
+                className="tap-target px-4 py-3 rounded-xl bg-[var(--surface-alt)] border border-[var(--surface-border)] text-[var(--foreground-muted)] hover:text-[var(--foreground)] text-xs font-semibold transition-colors flex items-center gap-1.5"
               >
-                <span>TRACK MY ORDER</span>
+                <Search className="w-3.5 h-3.5" />
+                <span>Track Order</span>
               </Link>
             </div>
 
-            {/* Trust Line */}
-            <div className="pt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[var(--foreground-muted)] font-medium">
-              <span>Local Rajahmundry Delivery</span>
-              <span className="text-[var(--surface-border-strong)]">&bull;</span>
-              <span>100% Eggless Available</span>
-              <span className="text-[var(--surface-border-strong)]">&bull;</span>
-              <span>Custom Cakes to Order</span>
+            {/* Micro Trust Points */}
+            <div className="pt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--foreground-muted)]">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-[var(--primary)]" />
+                Prakasam Nagar, Rajamahendravaram
+              </span>
+              <span>&bull;</span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-[var(--primary)]" />
+                Open 9 AM – 10 PM
+              </span>
+              <span>&bull;</span>
+              <span>Free Delivery Above ₹1500</span>
             </div>
           </div>
 
-          {/* Right Hero Visual Column (Single Strong Presentation) */}
-          <div className="lg:col-span-6">
-            <div className="relative mx-auto max-w-md lg:max-w-none">
-              <div className="relative aspect-4/5 rounded-2xl overflow-hidden shadow-lg border border-[var(--surface-border)] bg-[var(--surface)]">
-                <Image
-                  src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=1200&auto=format&fit=crop"
-                  alt="Cake Magic Belgian Chocolate Truffle Celebration Cake in Rajahmundry"
-                  fill
-                  priority
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 550px"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[var(--foreground)]/50 via-transparent to-transparent pointer-events-none" />
+          {/* Right Hero Visual Banner */}
+          <div className="lg:col-span-5">
+            <div className="relative aspect-16/11 sm:aspect-16/10 lg:aspect-4/3 rounded-2xl overflow-hidden shadow-md border border-[var(--surface-border)] bg-[var(--surface)]">
+              <Image
+                src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=900&auto=format&fit=crop"
+                alt="Cake Magic Belgian Chocolate Truffle Celebration Cake"
+                fill
+                priority
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 450px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[var(--foreground)]/70 via-transparent to-transparent pointer-events-none" />
 
-                {/* Inset Label */}
-                <div className="absolute bottom-5 left-5 right-5 p-4 rounded-xl bg-[var(--surface)]/95 backdrop-blur-xs border border-[var(--surface-border)] shadow-xs flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--accent-blush-dark)] block">
-                      Artisanal Signature
-                    </span>
-                    <h3 className="font-serif text-sm sm:text-base font-bold text-[var(--foreground)]">
-                      Belgian Dark Truffle Royale
-                    </h3>
-                  </div>
-                  <Link
-                    href="/cakes/belgian-chocolate-truffle"
-                    className="tap-target px-3 py-1.5 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] text-xs font-semibold hover:bg-[var(--primary-hover)] transition-colors shrink-0"
-                  >
-                    View Cake
-                  </Link>
+              <div className="absolute bottom-4 left-4 right-4 p-3 rounded-xl bg-[var(--surface)]/95 backdrop-blur-xs border border-[var(--surface-border)] shadow-xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--badge-eggless-text)] block">
+                    ★ Best Seller in Rajahmundry
+                  </span>
+                  <p className="font-serif text-xs sm:text-sm font-bold text-[var(--foreground)]">
+                    Belgian Chocolate Truffle
+                  </p>
                 </div>
+                <Link
+                  href="/cakes/belgian-chocolate-truffle"
+                  className="tap-target px-3 py-1.5 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] text-xs font-semibold hover:bg-[var(--primary-hover)] transition-colors shrink-0"
+                >
+                  Order ₹850
+                </Link>
               </div>
             </div>
           </div>

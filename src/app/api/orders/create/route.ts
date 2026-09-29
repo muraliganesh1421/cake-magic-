@@ -46,7 +46,8 @@ export async function POST(req: NextRequest) {
     let subtotal = 0;
     const validatedItems = items.map((item: {
       productId: string;
-      name: string;
+      name?: string;
+      productName?: string;
       flavour?: string;
       size?: string;
       eggless?: boolean;
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
       return {
         id: `item_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
         productId: product?.id || item.productId,
-        productName: product?.name || item.name,
+        productName: product?.name || item.productName || item.name || "Celebration Cake",
         flavour: item.flavour || "Classic",
         size: item.size || "1 kg",
         eggless: item.eggless !== undefined ? Boolean(item.eggless) : true,

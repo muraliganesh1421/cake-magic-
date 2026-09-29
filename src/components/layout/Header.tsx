@@ -17,13 +17,12 @@ export default function Header() {
 
   const navLinks = [
     { label: "Home", href: "/" },
-    { label: "Order Now", href: "/cakes" },
+    { label: "Cakes", href: "/cakes" },
+    { label: "Birthday", href: "/cakes?occasion=Birthday" },
+    { label: "Anniversary", href: "/cakes?occasion=Anniversary" },
+    { label: "Photo Cakes", href: "/cakes?occasion=Photo+Cakes" },
     { label: "Custom Cakes", href: "/custom-cakes", highlight: true },
-    { label: "Track Order", href: "/track" },
     { label: "Desserts", href: "/desserts" },
-    { label: "Bakery", href: "/bakery" },
-    { label: "Gallery", href: "/gallery" },
-    { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },
   ];
 
@@ -34,7 +33,7 @@ export default function Header() {
         <div className="bg-[var(--primary)] text-[var(--primary-foreground)] text-[11px] md:text-xs py-1.5 px-4 text-center font-medium tracking-wide">
           <div className="container mx-auto flex items-center justify-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-blush)] inline-block animate-pulse"></span>
-            <span>Handcrafted Bespoke Cakes & Bakery in Rajahmundry &bull; Pre-book celebration orders on WhatsApp</span>
+            <span>Cake Magic Rajahmundry &bull; Fresh celebration cakes &bull; Call +91 73580 84648 &bull; Free Delivery above ₹1500</span>
           </div>
         </div>
 

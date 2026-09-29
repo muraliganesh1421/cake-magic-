@@ -6,9 +6,9 @@ export async function GET(request: Request) {
   const orderId = searchParams.get("order")?.trim().toUpperCase();
   const phone = searchParams.get("phone")?.trim().replace(/\D/g, "");
 
-  if (!orderId || !phone) {
+  if (!orderId) {
     return NextResponse.json(
-      { error: "Order number and phone number are required" },
+      { error: "Order number is required" },
       { status: 400 }
     );
   }
@@ -16,15 +16,17 @@ export async function GET(request: Request) {
   const order = store.getOrderById(orderId);
 
   if (!order) {
-    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    return NextResponse.json({ error: "Order not found. Please check your order number." }, { status: 404 });
   }
 
-  const storedPhone = order.customerPhone.replace(/\D/g, "");
-  if (storedPhone !== phone && storedPhone.slice(-10) !== phone.slice(-10)) {
-    return NextResponse.json(
-      { error: "Phone number does not match order records" },
-      { status: 403 }
-    );
+  if (phone) {
+    const storedPhone = order.customerPhone.replace(/\D/g, "");
+    if (storedPhone !== phone && storedPhone.slice(-10) !== phone.slice(-10)) {
+      return NextResponse.json(
+        { error: "Phone number does not match order records" },
+        { status: 403 }
+      );
+    }
   }
 
   // Build a timeline for the order

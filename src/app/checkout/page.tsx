@@ -104,6 +104,7 @@ export default function CheckoutPage() {
           specialInstructions: instructions.trim() || undefined,
           items: items.map((item) => ({
             productId: item.productId,
+            name: item.name,
             productName: item.name,
             slug: item.slug,
             image: item.image,
@@ -124,9 +125,19 @@ export default function CheckoutPage() {
       }
 
       const data = await res.json();
-      const orderId = data.order?.id || data.id;
+      const orderNumber = data.order?.orderNumber || data.order?.id || data.id;
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("cakemagic_last_order", JSON.stringify({
+            orderNumber,
+            customerName: name.trim(),
+            customerPhone: phone.trim(),
+            placedAt: new Date().toISOString(),
+          }));
+        } catch {}
+      }
       clearCart();
-      router.push(`/checkout/success?order=${orderId}&name=${encodeURIComponent(name.trim())}`);
+      router.push(`/checkout/success?order=${orderNumber}&name=${encodeURIComponent(name.trim())}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {

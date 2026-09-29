@@ -1,0 +1,18 @@
+{
+  "businessName": "Cake Magic",
+  "tagline": "Fresh cakes, custom cakes & desserts in Rajahmundry (Est. 2015)",
+  "phone": "+91 73580 84648",
+  "whatsapp": "917358084648",
+  "email": "contact@cakemagic.in",
+  "address": "Jawaharlal Nehru Road, beside Abhaya Clinic, Srinivas Nagar, Prakasam Nagar, Rajamahendravaram, AP 533103",
+  "googleMapsUrl": "https://maps.google.com/?q=Cake+Magic+Jawaharlal+Nehru+Road+Rajahmundry",
+  "openingHours": "Monday to Sunday: 09:00 AM - 10:00 PM",
+  "deliveryAreas": "Prakasam Nagar, Danavaipeta, Srinivas Nagar, Kambala Cheruvu, Morampudi, Innespeta, Diwancheruvu, Katheru, Rajamahendravaram",
+  "deliveryCharge": 50,
+  "freeDeliveryThreshold": 1500,
+  "minPreparationHours": 24,
+  "acceptingOrders": true,
+  "customOrdersEnabled": true,
+  "logoUrl": "/icon.jpg",
+  "currency": "₹"
+}

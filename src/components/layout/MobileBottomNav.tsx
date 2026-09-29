@@ -9,8 +9,8 @@ export default function MobileBottomNav() {
   const pathname = usePathname();
   const { itemCount, setIsCartOpen } = useCart();
 
-  // Hide on admin routes
-  if (pathname.startsWith("/admin")) {
+  // Hide on admin & staff routes
+  if (pathname.startsWith("/admin") || pathname.startsWith("/staff")) {
     return null;
   }
 

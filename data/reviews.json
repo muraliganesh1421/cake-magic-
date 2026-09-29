@@ -1,0 +1,32 @@
+[
+  {
+    "id": "rev-1",
+    "source": "Google",
+    "name": "Customer Review (Rajahmundry)",
+    "text": "The custom birthday cake crafted for our family celebration was stunning. Beautiful detailing, freshly baked sponge, and the chocolate truffle was rich without being overly sweet.",
+    "rating": 5,
+    "date": "Recent verified order",
+    "verified": true,
+    "active": true
+  },
+  {
+    "id": "rev-2",
+    "source": "Google",
+    "name": "Customer Review (Danavaipeta, Rajahmundry)",
+    "text": "Ordered an eggless Red Velvet cake for an anniversary. The cream cheese frosting was balanced and velvety. Best part was timely delivery and clear coordination.",
+    "rating": 5,
+    "date": "Recent verified order",
+    "verified": true,
+    "active": true
+  },
+  {
+    "id": "rev-3",
+    "source": "Google",
+    "name": "Customer Review (Morampudi, Rajahmundry)",
+    "text": "We requested a customized theme cake based on a photo reference. Cake Magic matched the design accurately and the butterscotch praline taste was loved by all the kids.",
+    "rating": 5,
+    "date": "Recent verified order",
+    "verified": true,
+    "active": true
+  }
+]

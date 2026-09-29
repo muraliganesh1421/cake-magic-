@@ -1,0 +1,29 @@
+[
+  {
+    "id": "staff-1",
+    "name": "Master Baker Ramesh",
+    "phone": "9848011111",
+    "role": "BAKER",
+    "dutyStatus": "ON_DUTY",
+    "activeOrderCount": 1,
+    "active": true
+  },
+  {
+    "id": "staff-2",
+    "name": "Suresh (Cake Stylist)",
+    "phone": "9848022222",
+    "role": "DECORATOR",
+    "dutyStatus": "ON_DUTY",
+    "activeOrderCount": 1,
+    "active": true
+  },
+  {
+    "id": "staff-3",
+    "name": "Lakshmi (Quality & Dispatch)",
+    "phone": "9848033333",
+    "role": "DISPATCHER",
+    "dutyStatus": "OFF_DUTY",
+    "activeOrderCount": 0,
+    "active": true
+  }
+]

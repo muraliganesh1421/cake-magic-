@@ -1,0 +1,506 @@
+[
+  {
+    "id": "GS-1790676370570-531",
+    "timestamp": "2026-09-29T10:06:10.570Z",
+    "event": "STATUS_CHANGED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CM-20260929-004.",
+    "payload": {
+      "orderId": "CM-20260929-004",
+      "orderNumber": "CM-20260929-004",
+      "customerName": "Ramesh Babu",
+      "customerPhone": "9848181144",
+      "totalAmount": 1300,
+      "status": "DELIVERED",
+      "staffName": "Master Baker Ramesh"
+    }
+  },
+  {
+    "id": "WA-1790676370570-741",
+    "timestamp": "2026-09-29T10:06:10.570Z",
+    "event": "STATUS_CHANGED",
+    "channel": "WHATSAPP",
+    "recipient": "9848181144",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for STATUS_CHANGED to 9848181144.",
+    "payload": {
+      "orderId": "CM-20260929-004",
+      "orderNumber": "CM-20260929-004",
+      "customerName": "Ramesh Babu",
+      "customerPhone": "9848181144",
+      "totalAmount": 1300,
+      "status": "DELIVERED",
+      "staffName": "Master Baker Ramesh"
+    }
+  },
+  {
+    "id": "GS-1790676370568-506",
+    "timestamp": "2026-09-29T10:06:10.568Z",
+    "event": "STATUS_CHANGED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CM-20260929-004.",
+    "payload": {
+      "orderId": "CM-20260929-004",
+      "orderNumber": "CM-20260929-004",
+      "customerName": "Ramesh Babu",
+      "customerPhone": "9848181144",
+      "totalAmount": 1300,
+      "status": "OUT_FOR_DELIVERY",
+      "staffName": "Master Baker Ramesh"
+    }
+  },
+  {
+    "id": "WA-1790676370568-52",
+    "timestamp": "2026-09-29T10:06:10.568Z",
+    "event": "STATUS_CHANGED",
+    "channel": "WHATSAPP",
+    "recipient": "9848181144",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for STATUS_CHANGED to 9848181144.",
+    "payload": {
+      "orderId": "CM-20260929-004",
+      "orderNumber": "CM-20260929-004",
+      "customerName": "Ramesh Babu",
+      "customerPhone": "9848181144",
+      "totalAmount": 1300,
+      "status": "OUT_FOR_DELIVERY",
+      "staffName": "Master Baker Ramesh"
+    }
+  },
+  {
+    "id": "GS-1790676370566-390",
+    "timestamp": "2026-09-29T10:06:10.566Z",
+    "event": "STATUS_CHANGED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CM-20260929-004.",
+    "payload": {
+      "orderId": "CM-20260929-004",
+      "orderNumber": "CM-20260929-004",
+      "customerName": "Ramesh Babu",
+      "customerPhone": "9848181144",
+      "totalAmount": 1300,
+      "status": "READY",
+      "staffName": "Master Baker Ramesh"
+    }
+  },
+  {
+    "id": "WA-1790676370566-898",
+    "timestamp": "2026-09-29T10:06:10.566Z",
+    "event": "STATUS_CHANGED",
+    "channel": "WHATSAPP",
+    "recipient": "9848181144",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for STATUS_CHANGED to 9848181144.",
+    "payload": {
+      "orderId": "CM-20260929-004",
+      "orderNumber": "CM-20260929-004",
+      "customerName": "Ramesh Babu",
+      "customerPhone": "9848181144",
+      "totalAmount": 1300,
+      "status": "READY",
+      "staffName": "Master Baker Ramesh"
+    }
+  },
+  {
+    "id": "GS-1790676370564-214",
+    "timestamp": "2026-09-29T10:06:10.564Z",
+    "event": "STATUS_CHANGED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CM-20260929-004.",
+    "payload": {
+      "orderId": "CM-20260929-004",
+      "orderNumber": "CM-20260929-004",
+      "customerName": "Ramesh Babu",
+      "customerPhone": "9848181144",
+      "totalAmount": 1300,
+      "status": "PREPARING",
+      "staffName": "Master Baker Ramesh"
+    }
+  },
+  {
+    "id": "WA-1790676370564-843",
+    "timestamp": "2026-09-29T10:06:10.564Z",
+    "event": "STATUS_CHANGED",
+    "channel": "WHATSAPP",
+    "recipient": "9848181144",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for STATUS_CHANGED to 9848181144.",
+    "payload": {
+      "orderId": "CM-20260929-004",
+      "orderNumber": "CM-20260929-004",
+      "customerName": "Ramesh Babu",
+      "customerPhone": "9848181144",
+      "totalAmount": 1300,
+      "status": "PREPARING",
+      "staffName": "Master Baker Ramesh"
+    }
+  },
+  {
+    "id": "GS-1790676370561-553",
+    "timestamp": "2026-09-29T10:06:10.561Z",
+    "event": "ORDER_CREATED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CM-20260929-004.",
+    "payload": {
+      "orderId": "CM-20260929-004",
+      "orderNumber": "CM-20260929-004",
+      "customerName": "Ramesh Babu",
+      "customerPhone": "9848181144",
+      "totalAmount": 1300,
+      "status": "CONFIRMED",
+      "staffName": "Master Baker Ramesh",
+      "deliveryDate": "2026-09-30T10:06:10.556Z",
+      "itemsSummary": "1x Belgian Chocolate Truffle Cake"
+    }
+  },
+  {
+    "id": "WA-1790676370561-945",
+    "timestamp": "2026-09-29T10:06:10.561Z",
+    "event": "ORDER_CREATED",
+    "channel": "WHATSAPP",
+    "recipient": "9848181144",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for ORDER_CREATED to 9848181144.",
+    "payload": {
+      "orderId": "CM-20260929-004",
+      "orderNumber": "CM-20260929-004",
+      "customerName": "Ramesh Babu",
+      "customerPhone": "9848181144",
+      "totalAmount": 1300,
+      "status": "CONFIRMED",
+      "staffName": "Master Baker Ramesh",
+      "deliveryDate": "2026-09-30T10:06:10.556Z",
+      "itemsSummary": "1x Belgian Chocolate Truffle Cake"
+    }
+  },
+  {
+    "id": "GS-1790672860609-601",
+    "timestamp": "2026-09-29T09:07:40.609Z",
+    "event": "CUSTOM_REQUEST_CREATED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CR-20260929-002.",
+    "payload": {
+      "customRequestId": "CR-20260929-002",
+      "customerName": "Wedding Custom Patron",
+      "customerPhone": "9848088888",
+      "deliveryDate": "2026-10-01T09:07:40.608Z",
+      "itemsSummary": "Wedding Cake (Red Velvet Cream Cheese, 3 kg)"
+    }
+  },
+  {
+    "id": "WA-1790672860609-772",
+    "timestamp": "2026-09-29T09:07:40.609Z",
+    "event": "CUSTOM_REQUEST_CREATED",
+    "channel": "WHATSAPP",
+    "recipient": "9848088888",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for CUSTOM_REQUEST_CREATED to 9848088888.",
+    "payload": {
+      "customRequestId": "CR-20260929-002",
+      "customerName": "Wedding Custom Patron",
+      "customerPhone": "9848088888",
+      "deliveryDate": "2026-10-01T09:07:40.608Z",
+      "itemsSummary": "Wedding Cake (Red Velvet Cream Cheese, 3 kg)"
+    }
+  },
+  {
+    "id": "GS-1790672860607-431",
+    "timestamp": "2026-09-29T09:07:40.607Z",
+    "event": "STAFF_ASSIGNED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CM-20260929-003.",
+    "payload": {
+      "orderId": "CM-20260929-003",
+      "orderNumber": "CM-20260929-003",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "staffName": "Suresh (Cake Stylist)"
+    }
+  },
+  {
+    "id": "WA-1790672860607-955",
+    "timestamp": "2026-09-29T09:07:40.607Z",
+    "event": "STAFF_ASSIGNED",
+    "channel": "WHATSAPP",
+    "recipient": "9848099999",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for STAFF_ASSIGNED to 9848099999.",
+    "payload": {
+      "orderId": "CM-20260929-003",
+      "orderNumber": "CM-20260929-003",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "staffName": "Suresh (Cake Stylist)"
+    }
+  },
+  {
+    "id": "GS-1790672860603-262",
+    "timestamp": "2026-09-29T09:07:40.603Z",
+    "event": "STATUS_CHANGED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CM-20260929-003.",
+    "payload": {
+      "orderId": "CM-20260929-003",
+      "orderNumber": "CM-20260929-003",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "totalAmount": 1000,
+      "status": "PREPARING",
+      "staffName": "Master Baker Ramesh"
+    }
+  },
+  {
+    "id": "WA-1790672860603-442",
+    "timestamp": "2026-09-29T09:07:40.603Z",
+    "event": "STATUS_CHANGED",
+    "channel": "WHATSAPP",
+    "recipient": "9848099999",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for STATUS_CHANGED to 9848099999.",
+    "payload": {
+      "orderId": "CM-20260929-003",
+      "orderNumber": "CM-20260929-003",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "totalAmount": 1000,
+      "status": "PREPARING",
+      "staffName": "Master Baker Ramesh"
+    }
+  },
+  {
+    "id": "GS-1790672860599-465",
+    "timestamp": "2026-09-29T09:07:40.599Z",
+    "event": "ORDER_CREATED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CM-20260929-003.",
+    "payload": {
+      "orderId": "CM-20260929-003",
+      "orderNumber": "CM-20260929-003",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "totalAmount": 1000,
+      "status": "CONFIRMED",
+      "staffName": "Master Baker Ramesh",
+      "deliveryDate": "2026-09-30T09:07:40.596Z",
+      "itemsSummary": "1x Dutch Chocolate Truffle Cake"
+    }
+  },
+  {
+    "id": "WA-1790672860599-557",
+    "timestamp": "2026-09-29T09:07:40.599Z",
+    "event": "ORDER_CREATED",
+    "channel": "WHATSAPP",
+    "recipient": "9848099999",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for ORDER_CREATED to 9848099999.",
+    "payload": {
+      "orderId": "CM-20260929-003",
+      "orderNumber": "CM-20260929-003",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "totalAmount": 1000,
+      "status": "CONFIRMED",
+      "staffName": "Master Baker Ramesh",
+      "deliveryDate": "2026-09-30T09:07:40.596Z",
+      "itemsSummary": "1x Dutch Chocolate Truffle Cake"
+    }
+  },
+  {
+    "id": "GS-1790671477891-540",
+    "timestamp": "2026-09-29T08:44:37.891Z",
+    "event": "CUSTOM_REQUEST_CREATED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CR-20260929-001.",
+    "payload": {
+      "customRequestId": "CR-20260929-001",
+      "customerName": "Wedding Custom Patron",
+      "customerPhone": "9848088888",
+      "deliveryDate": "2026-10-01T08:44:37.888Z",
+      "itemsSummary": "Wedding Cake (Red Velvet Cream Cheese, 3 kg)"
+    }
+  },
+  {
+    "id": "WA-1790671477891-313",
+    "timestamp": "2026-09-29T08:44:37.891Z",
+    "event": "CUSTOM_REQUEST_CREATED",
+    "channel": "WHATSAPP",
+    "recipient": "9848088888",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for CUSTOM_REQUEST_CREATED to 9848088888.",
+    "payload": {
+      "customRequestId": "CR-20260929-001",
+      "customerName": "Wedding Custom Patron",
+      "customerPhone": "9848088888",
+      "deliveryDate": "2026-10-01T08:44:37.888Z",
+      "itemsSummary": "Wedding Cake (Red Velvet Cream Cheese, 3 kg)"
+    }
+  },
+  {
+    "id": "GS-1790671477887-604",
+    "timestamp": "2026-09-29T08:44:37.887Z",
+    "event": "STAFF_ASSIGNED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CM-20260929-002.",
+    "payload": {
+      "orderId": "CM-20260929-002",
+      "orderNumber": "CM-20260929-002",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "staffName": "Suresh (Cake Stylist)"
+    }
+  },
+  {
+    "id": "WA-1790671477887-422",
+    "timestamp": "2026-09-29T08:44:37.887Z",
+    "event": "STAFF_ASSIGNED",
+    "channel": "WHATSAPP",
+    "recipient": "9848099999",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for STAFF_ASSIGNED to 9848099999.",
+    "payload": {
+      "orderId": "CM-20260929-002",
+      "orderNumber": "CM-20260929-002",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "staffName": "Suresh (Cake Stylist)"
+    }
+  },
+  {
+    "id": "GS-1790671477880-555",
+    "timestamp": "2026-09-29T08:44:37.880Z",
+    "event": "STATUS_CHANGED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CM-20260929-002.",
+    "payload": {
+      "orderId": "CM-20260929-002",
+      "orderNumber": "CM-20260929-002",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "totalAmount": 1000,
+      "status": "PREPARING",
+      "staffName": "Suresh (Cake Stylist)"
+    }
+  },
+  {
+    "id": "WA-1790671477880-551",
+    "timestamp": "2026-09-29T08:44:37.880Z",
+    "event": "STATUS_CHANGED",
+    "channel": "WHATSAPP",
+    "recipient": "9848099999",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for STATUS_CHANGED to 9848099999.",
+    "payload": {
+      "orderId": "CM-20260929-002",
+      "orderNumber": "CM-20260929-002",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "totalAmount": 1000,
+      "status": "PREPARING",
+      "staffName": "Suresh (Cake Stylist)"
+    }
+  },
+  {
+    "id": "GS-1790671477875-795",
+    "timestamp": "2026-09-29T08:44:37.875Z",
+    "event": "ORDER_CREATED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CM-20260929-002.",
+    "payload": {
+      "orderId": "CM-20260929-002",
+      "orderNumber": "CM-20260929-002",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "totalAmount": 1000,
+      "status": "CONFIRMED",
+      "staffName": "Suresh (Cake Stylist)",
+      "deliveryDate": "2026-09-30T08:44:37.869Z",
+      "itemsSummary": "1x Dutch Chocolate Truffle Cake"
+    }
+  },
+  {
+    "id": "WA-1790671477875-663",
+    "timestamp": "2026-09-29T08:44:37.875Z",
+    "event": "ORDER_CREATED",
+    "channel": "WHATSAPP",
+    "recipient": "9848099999",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for ORDER_CREATED to 9848099999.",
+    "payload": {
+      "orderId": "CM-20260929-002",
+      "orderNumber": "CM-20260929-002",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "totalAmount": 1000,
+      "status": "CONFIRMED",
+      "staffName": "Suresh (Cake Stylist)",
+      "deliveryDate": "2026-09-30T08:44:37.869Z",
+      "itemsSummary": "1x Dutch Chocolate Truffle Cake"
+    }
+  },
+  {
+    "id": "GS-1790671383241-543",
+    "timestamp": "2026-09-29T08:43:03.241Z",
+    "event": "ORDER_CREATED",
+    "channel": "GOOGLE_SHEETS",
+    "recipient": "Operational Google Sheet",
+    "status": "READY_TO_CONNECT",
+    "details": "Google Sheets integration ready to connect. Row format prepared for CM-20260929-001.",
+    "payload": {
+      "orderId": "ord_1790671383240_789",
+      "orderNumber": "CM-20260929-001",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "totalAmount": 1000,
+      "status": "CONFIRMED",
+      "staffName": "Master Baker Ramesh",
+      "deliveryDate": "2026-09-30T08:43:03.237Z",
+      "itemsSummary": "1x Dutch Chocolate Truffle Cake"
+    }
+  },
+  {
+    "id": "WA-1790671383241-319",
+    "timestamp": "2026-09-29T08:43:03.241Z",
+    "event": "ORDER_CREATED",
+    "channel": "WHATSAPP",
+    "recipient": "9848099999",
+    "status": "READY_TO_CONNECT",
+    "details": "WhatsApp Cloud API ready to connect. Template mapped for ORDER_CREATED to 9848099999.",
+    "payload": {
+      "orderId": "ord_1790671383240_789",
+      "orderNumber": "CM-20260929-001",
+      "customerName": "Integration Test Customer",
+      "customerPhone": "9848099999",
+      "totalAmount": 1000,
+      "status": "CONFIRMED",
+      "staffName": "Master Baker Ramesh",
+      "deliveryDate": "2026-09-30T08:43:03.237Z",
+      "itemsSummary": "1x Dutch Chocolate Truffle Cake"
+    }
+  }
+]

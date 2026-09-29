@@ -1,12 +1,9 @@
 import { store } from "@/lib/store";
 import Hero from "@/components/home/Hero";
-import OccasionDiscovery from "@/components/home/OccasionDiscovery";
-import FeaturedCakes from "@/components/home/FeaturedCakes";
+import HomeProductSection from "@/components/home/HomeProductSection";
 import CustomCakeFeature from "@/components/home/CustomCakeFeature";
-import DreamCakeSection from "@/components/home/DreamCakeSection";
-import EgglessBanner from "@/components/home/EgglessBanner";
+import BakeryInfoSection from "@/components/home/BakeryInfoSection";
 import SocialProof from "@/components/home/SocialProof";
-import InstagramFeed from "@/components/home/InstagramFeed";
 
 export default function HomePage() {
   const products = store.getProducts().filter((p) => p.active);
@@ -14,29 +11,20 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col w-full">
-      {/* 1. Hero: What is Cake Magic? */}
+      {/* 1. Compact Hero Banner */}
       <Hero />
 
-      {/* 2. Featured Cakes: What can I buy? */}
-      <FeaturedCakes products={products} />
+      {/* 2. Direct Category Buttons & Product Cards Grid (3-5 second customer ordering) */}
+      <HomeProductSection products={products} />
 
-      {/* 3. Occasions: What are you celebrating? */}
-      <OccasionDiscovery />
-
-      {/* 4. AI Cake Customizer: Create Your Dream Cake */}
-      <DreamCakeSection />
-
-      {/* 5. Custom Cake: Can Cake Magic make my idea? */}
+      {/* 3. Custom Cake Section */}
       <CustomCakeFeature />
 
-      {/* 6. Eggless Collection Feature */}
-      <EgglessBanner />
+      {/* 4. Local Rajahmundry Store & Delivery Information */}
+      <BakeryInfoSection />
 
-      {/* 7. Reviews: Can I trust them? */}
+      {/* 5. Customer Trust & Reviews */}
       <SocialProof reviews={reviews} />
-
-      {/* 8. Gallery / Kitchen Feed: What kind of cakes do they create? */}
-      <InstagramFeed />
     </div>
   );
 }

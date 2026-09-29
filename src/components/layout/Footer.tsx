@@ -119,35 +119,39 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Store & Local Contact (Rule 2 compliant) */}
+          {/* Store & Local Contact */}
           <div className="space-y-3">
             <h2 className="font-serif text-base font-semibold text-[var(--foreground)]">Store & Location</h2>
             <div className="space-y-2.5 text-xs text-[var(--foreground-muted)]">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
-                <span>
-                  {siteConfig.hasOwnerAddress
-                    ? siteConfig.address
-                    : "Rajahmundry, Andhra Pradesh, India"}
-                </span>
+                <span>{siteConfig.address}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[var(--primary)] shrink-0" />
-                <span>
-                  {siteConfig.hasOwnerHours
-                    ? `Hours: ${siteConfig.openingHours}`
-                    : "Pre-orders & celebration enquiries open daily"}
-                </span>
+                <span>Hours: {siteConfig.openingHours}</span>
               </div>
-              {siteConfig.hasOwnerPhone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-[var(--primary)] shrink-0" />
-                  <span>{siteConfig.phone}</span>
+              <div className="flex items-start gap-2">
+                <Phone className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p><a href="tel:+917358084648" className="hover:underline font-semibold">+91 73580 84648</a> (WhatsApp)</p>
+                  <p><a href="tel:+919966094799" className="hover:underline">+91 99660 94799</a></p>
+                  <p><a href="tel:+919848181144" className="hover:underline">+91 98481 81144</a></p>
                 </div>
-              )}
+              </div>
+              <div className="pt-1">
+                <a
+                  href={siteConfig.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--primary)] hover:underline"
+                >
+                  <span>Instagram: {siteConfig.instagramHandle}</span>
+                </a>
+              </div>
               <div className="flex items-start gap-2 pt-1 text-[11px] text-[var(--foreground-subtle)]">
                 <ShieldCheck className="w-4 h-4 text-[var(--badge-eggless-text)] shrink-0" />
-                <span>Advance order recommended for multi-tier and custom designer themes.</span>
+                <span>Serving celebrations across Rajamahendravaram since 2015.</span>
               </div>
             </div>
           </div>

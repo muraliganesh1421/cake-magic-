@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
 import {
   Product,
   CustomCakeRequest,
@@ -15,52 +16,166 @@ export type { StaffMember };
 import { initialProducts, initialGallery, initialReviews } from "@/data/initialData";
 import { dispatchAutomationEvent } from "./events";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const PRODUCTS_FILE = path.join(DATA_DIR, "products.json");
-const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
-const CUSTOM_REQUESTS_FILE = path.join(DATA_DIR, "custom_requests.json");
-const ENQUIRIES_FILE = path.join(DATA_DIR, "enquiries.json");
-const GALLERY_FILE = path.join(DATA_DIR, "gallery.json");
-const REVIEWS_FILE = path.join(DATA_DIR, "reviews.json");
-const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
-const STAFF_FILE = path.join(DATA_DIR, "staff.json");
-
-function ensureDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
+// Global in-memory cache to ensure state is immediately shared across requests in the Node process
+declare global {
+  var __cakeMagicMemoryStore: Record<string, unknown> | undefined;
 }
+if (!globalThis.__cakeMagicMemoryStore) {
+  globalThis.__cakeMagicMemoryStore = {};
+}
+const memoryStore = globalThis.__cakeMagicMemoryStore;
 
-function readJsonFile<T>(filePath: string, fallback: T): T {
+// Resolve safe writable directory (handles Vercel read-only filesystem by falling back to os.tmpdir())
+let cachedWritableDir: string | null = null;
+function getWritableDir(): string {
+  if (cachedWritableDir) return cachedWritableDir;
+  const localDir = path.join(process.cwd(), "data");
   try {
-    ensureDir();
-    if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, JSON.stringify(fallback, null, 2), "utf-8");
-      return fallback;
+    if (!fs.existsSync(localDir)) {
+      fs.mkdirSync(localDir, { recursive: true });
     }
-    const data = fs.readFileSync(filePath, "utf-8");
-    return JSON.parse(data) as T;
-  } catch (error) {
-    console.error(`Error reading ${filePath}:`, error);
-    return fallback;
+    const testFile = path.join(localDir, `.write_test_${Date.now()}`);
+    fs.writeFileSync(testFile, "ok");
+    fs.unlinkSync(testFile);
+    cachedWritableDir = localDir;
+    return localDir;
+  } catch {
+    const tmpDir = path.join(os.tmpdir(), "cake-magic-data");
+    try {
+      if (!fs.existsSync(tmpDir)) {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      }
+    } catch (e) {
+      console.warn("Could not create tmpDir:", e);
+    }
+    cachedWritableDir = tmpDir;
+    return tmpDir;
   }
 }
 
-function writeJsonFile<T>(filePath: string, data: T): void {
+function getFilePath(filename: string): { writablePath: string; sourcePath: string } {
+  const isLocal = getWritableDir() === path.join(process.cwd(), "data");
+  const targetDir = isLocal ? path.join(process.cwd(), "data") : path.join(os.tmpdir(), "cake-magic-data");
+
+  switch (filename) {
+    case "products.json":
+      return {
+        sourcePath: path.join(process.cwd(), "data", "products.json"),
+        writablePath: path.join(targetDir, "products.json"),
+      };
+    case "orders.json":
+      return {
+        sourcePath: path.join(process.cwd(), "data", "orders.json"),
+        writablePath: path.join(targetDir, "orders.json"),
+      };
+    case "settings.json":
+      return {
+        sourcePath: path.join(process.cwd(), "data", "settings.json"),
+        writablePath: path.join(targetDir, "settings.json"),
+      };
+    case "staff.json":
+      return {
+        sourcePath: path.join(process.cwd(), "data", "staff.json"),
+        writablePath: path.join(targetDir, "staff.json"),
+      };
+    case "custom_requests.json":
+      return {
+        sourcePath: path.join(process.cwd(), "data", "custom_requests.json"),
+        writablePath: path.join(targetDir, "custom_requests.json"),
+      };
+    case "enquiries.json":
+      return {
+        sourcePath: path.join(process.cwd(), "data", "enquiries.json"),
+        writablePath: path.join(targetDir, "enquiries.json"),
+      };
+    case "gallery.json":
+      return {
+        sourcePath: path.join(process.cwd(), "data", "gallery.json"),
+        writablePath: path.join(targetDir, "gallery.json"),
+      };
+    case "reviews.json":
+      return {
+        sourcePath: path.join(process.cwd(), "data", "reviews.json"),
+        writablePath: path.join(targetDir, "reviews.json"),
+      };
+    default:
+      return {
+        sourcePath: path.join(process.cwd(), "data", filename),
+        writablePath: path.join(targetDir, filename),
+      };
+  }
+}
+
+function readJsonFile<T>(filename: string, fallback: T): T {
+  // 1. Check memory cache first
+  if (memoryStore[filename] !== undefined) {
+    return memoryStore[filename] as T;
+  }
+
+  const { writablePath, sourcePath } = getFilePath(filename);
+
+  // 2. Try reading from writable path (contains latest updates)
   try {
-    ensureDir();
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
-  } catch (error) {
-    console.error(`Error writing ${filePath}:`, error);
+    if (fs.existsSync(writablePath)) {
+      const data = fs.readFileSync(writablePath, "utf-8");
+      const parsed = JSON.parse(data) as T;
+      memoryStore[filename] = parsed;
+      return parsed;
+    }
+  } catch (err) {
+    console.warn(`Could not read ${writablePath}:`, err);
   }
+
+  // 3. Try reading from source repository path
+  try {
+    if (fs.existsSync(sourcePath)) {
+      const data = fs.readFileSync(sourcePath, "utf-8");
+      const parsed = JSON.parse(data) as T;
+      memoryStore[filename] = parsed;
+      // Copy to writable path
+      try {
+        fs.writeFileSync(writablePath, JSON.stringify(parsed, null, 2), "utf-8");
+      } catch {}
+      return parsed;
+    }
+  } catch (err) {
+    console.warn(`Could not read ${sourcePath}:`, err);
+  }
+
+  // 4. Return fallback
+  memoryStore[filename] = fallback;
+  try {
+    fs.writeFileSync(writablePath, JSON.stringify(fallback, null, 2), "utf-8");
+  } catch {}
+  return fallback;
 }
 
+function writeJsonFile<T>(filename: string, data: T): void {
+  // Always update memory store immediately
+  memoryStore[filename] = data;
+
+  const { writablePath, sourcePath } = getFilePath(filename);
+
+  // Write to writable path
+  try {
+    fs.writeFileSync(writablePath, JSON.stringify(data, null, 2), "utf-8");
+  } catch (err) {
+    console.error(`Error writing to ${writablePath}:`, err);
+  }
+
+  // Also try writing to local source path if possible
+  if (writablePath !== sourcePath) {
+    try {
+      fs.writeFileSync(sourcePath, JSON.stringify(data, null, 2), "utf-8");
+    } catch {}
+  }
+}
 
 const defaultStaff: StaffMember[] = [
   {
     id: "staff-1",
     name: "Master Baker Ramesh",
-    phone: "9848011111",
+    phone: "+91 98480 11111",
     role: "BAKER",
     dutyStatus: "ON_DUTY",
     activeOrderCount: 0,
@@ -69,7 +184,7 @@ const defaultStaff: StaffMember[] = [
   {
     id: "staff-2",
     name: "Suresh (Cake Stylist)",
-    phone: "9848022222",
+    phone: "+91 98480 22222",
     role: "DECORATOR",
     dutyStatus: "ON_DUTY",
     activeOrderCount: 0,
@@ -78,7 +193,7 @@ const defaultStaff: StaffMember[] = [
   {
     id: "staff-3",
     name: "Lakshmi (Quality & Dispatch)",
-    phone: "9848033333",
+    phone: "+91 98480 33333",
     role: "DISPATCHER",
     dutyStatus: "OFF_DUTY",
     activeOrderCount: 0,
@@ -88,14 +203,17 @@ const defaultStaff: StaffMember[] = [
 
 const defaultSettings: BusinessSettingsData = {
   businessName: "Cake Magic",
-  tagline: "Bespoke cakes & bakery creations in Rajahmundry",
-  phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "919848000000",
-  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919848000000",
+  tagline: "Fresh cakes, custom cakes & desserts in Rajahmundry (Est. 2015)",
+  phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "+91 73580 84648",
+  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "917358084648",
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contact@cakemagic.in",
-  address: process.env.NEXT_PUBLIC_STORE_ADDRESS || "Danavaipeta, Rajahmundry, Andhra Pradesh 533103",
-  googleMapsUrl: "https://maps.google.com/?q=Cake+Magic+Rajahmundry",
+  address:
+    process.env.NEXT_PUBLIC_STORE_ADDRESS ||
+    "Jawaharlal Nehru Road, beside Abhaya Clinic, Srinivas Nagar, Prakasam Nagar, Rajamahendravaram, AP 533103",
+  googleMapsUrl: "https://maps.google.com/?q=Cake+Magic+Jawaharlal+Nehru+Road+Rajahmundry",
   openingHours: "Monday to Sunday: 09:00 AM - 10:00 PM",
-  deliveryAreas: "Rajahmundry, Danavaipeta, Kambala Cheruvu, Morampudi, Innespeta, Diwancheruvu, Katheru",
+  deliveryAreas:
+    "Prakasam Nagar, Danavaipeta, Srinivas Nagar, Kambala Cheruvu, Morampudi, Innespeta, Diwancheruvu, Katheru, Rajamahendravaram",
   deliveryCharge: 50,
   freeDeliveryThreshold: 1500,
   minPreparationHours: 24,
@@ -144,18 +262,18 @@ const defaultOrders: OrderRecord[] = [
 export const store = {
   // --- Business Settings ---
   getSettings(): BusinessSettingsData {
-    return readJsonFile<BusinessSettingsData>(SETTINGS_FILE, defaultSettings);
+    return readJsonFile<BusinessSettingsData>("settings.json", defaultSettings);
   },
   updateSettings(data: Partial<BusinessSettingsData>): BusinessSettingsData {
     const current = this.getSettings();
     const updated = { ...current, ...data };
-    writeJsonFile(SETTINGS_FILE, updated);
+    writeJsonFile("settings.json", updated);
     return updated;
   },
 
   // --- Staff System & Duty Status ---
   getStaff(): StaffMember[] {
-    const staffList = readJsonFile<StaffMember[]>(STAFF_FILE, defaultStaff);
+    const staffList = readJsonFile<StaffMember[]>("staff.json", defaultStaff);
     const activeOrders = this.getOrders().filter(
       (o) => !["DELIVERED", "CANCELLED", "REFUNDED"].includes(o.status)
     );
@@ -172,7 +290,7 @@ export const store = {
     } else {
       staffList.push(member);
     }
-    writeJsonFile(STAFF_FILE, staffList);
+    writeJsonFile("staff.json", staffList);
     return member;
   },
   setStaffDuty(staffId: string, dutyStatus: "ON_DUTY" | "OFF_DUTY"): StaffMember | null {
@@ -180,13 +298,13 @@ export const store = {
     const member = staffList.find((s) => s.id === staffId);
     if (!member) return null;
     member.dutyStatus = dutyStatus;
-    writeJsonFile(STAFF_FILE, staffList);
+    writeJsonFile("staff.json", staffList);
     return member;
   },
 
   // --- Products ---
   getProducts(): Product[] {
-    return readJsonFile<Product[]>(PRODUCTS_FILE, initialProducts);
+    return readJsonFile<Product[]>("products.json", initialProducts);
   },
   getProductBySlug(slug: string): Product | undefined {
     const products = this.getProducts();
@@ -200,19 +318,23 @@ export const store = {
     } else {
       products.unshift(product);
     }
-    writeJsonFile(PRODUCTS_FILE, products);
+    writeJsonFile("products.json", products);
     return product;
   },
   deleteProduct(id: string): boolean {
     const products = this.getProducts();
     const filtered = products.filter((p) => p.id !== id);
-    writeJsonFile(PRODUCTS_FILE, filtered);
+    writeJsonFile("products.json", filtered);
     return true;
   },
 
   // --- Orders ---
   getOrders(): OrderRecord[] {
-    return readJsonFile<OrderRecord[]>(ORDERS_FILE, defaultOrders);
+    const orders = readJsonFile<OrderRecord[]>("orders.json", defaultOrders);
+    if (!orders || orders.length === 0) {
+      return defaultOrders;
+    }
+    return orders;
   },
   getOrderById(id: string): OrderRecord | undefined {
     return this.getOrders().find((o) => o.id === id || o.orderNumber === id);
@@ -244,7 +366,7 @@ export const store = {
     };
 
     orders.unshift(newOrder);
-    writeJsonFile(ORDERS_FILE, orders);
+    writeJsonFile("orders.json", orders);
 
     // Automation Event Dispatch
     dispatchAutomationEvent("ORDER_CREATED", {
@@ -268,7 +390,7 @@ export const store = {
 
     order.status = status;
     order.updatedAt = new Date().toISOString();
-    writeJsonFile(ORDERS_FILE, orders);
+    writeJsonFile("orders.json", orders);
 
     dispatchAutomationEvent("STATUS_CHANGED", {
       orderId: order.id,
@@ -292,7 +414,7 @@ export const store = {
     order.assignedStaffId = staff ? staff.id : null;
     order.assignedStaffName = staff ? staff.name : "Unassigned Queue";
     order.updatedAt = new Date().toISOString();
-    writeJsonFile(ORDERS_FILE, orders);
+    writeJsonFile("orders.json", orders);
 
     dispatchAutomationEvent("STAFF_ASSIGNED", {
       orderId: order.id,
@@ -307,7 +429,7 @@ export const store = {
 
   // --- Custom Requests ---
   getCustomRequests(): CustomCakeRequest[] {
-    return readJsonFile<CustomCakeRequest[]>(CUSTOM_REQUESTS_FILE, []);
+    return readJsonFile<CustomCakeRequest[]>("custom_requests.json", []);
   },
   createCustomRequest(data: Omit<CustomCakeRequest, "id" | "createdAt" | "status">): CustomCakeRequest {
     const requests = this.getCustomRequests();
@@ -323,7 +445,7 @@ export const store = {
       createdAt: new Date().toISOString(),
     };
     requests.unshift(newRequest);
-    writeJsonFile(CUSTOM_REQUESTS_FILE, requests);
+    writeJsonFile("custom_requests.json", requests);
 
     dispatchAutomationEvent("CUSTOM_REQUEST_CREATED", {
       customRequestId: newRequest.id,
@@ -340,7 +462,7 @@ export const store = {
     const target = requests.find((r) => r.id === id);
     if (!target) return null;
     Object.assign(target, updates);
-    writeJsonFile(CUSTOM_REQUESTS_FILE, requests);
+    writeJsonFile("custom_requests.json", requests);
 
     if (updates.status === "Confirmed" || updates.status === "Payment Pending") {
       dispatchAutomationEvent("CUSTOM_QUOTE_CREATED", {
@@ -356,7 +478,7 @@ export const store = {
 
   // --- Enquiries ---
   getEnquiries(): Enquiry[] {
-    return readJsonFile<Enquiry[]>(ENQUIRIES_FILE, []);
+    return readJsonFile<Enquiry[]>("enquiries.json", []);
   },
   createEnquiry(data: Omit<Enquiry, "id" | "createdAt" | "status">): Enquiry {
     const enquiries = this.getEnquiries();
@@ -367,7 +489,7 @@ export const store = {
       createdAt: new Date().toISOString(),
     };
     enquiries.unshift(newEnquiry);
-    writeJsonFile(ENQUIRIES_FILE, enquiries);
+    writeJsonFile("enquiries.json", enquiries);
     return newEnquiry;
   },
   updateEnquiryStatus(id: string, status: Enquiry["status"]): Enquiry | null {
@@ -375,13 +497,13 @@ export const store = {
     const idx = enquiries.findIndex((e) => e.id === id);
     if (idx < 0) return null;
     enquiries[idx] = { ...enquiries[idx], status };
-    writeJsonFile(ENQUIRIES_FILE, enquiries);
+    writeJsonFile("enquiries.json", enquiries);
     return enquiries[idx];
   },
 
   // --- Gallery ---
   getGallery(): GalleryItem[] {
-    return readJsonFile<GalleryItem[]>(GALLERY_FILE, initialGallery);
+    return readJsonFile<GalleryItem[]>("gallery.json", initialGallery);
   },
   addGalleryItem(item: Omit<GalleryItem, "id" | "createdAt">): GalleryItem {
     const gallery = this.getGallery();
@@ -391,18 +513,18 @@ export const store = {
       createdAt: new Date().toISOString().split("T")[0],
     };
     gallery.unshift(newItem);
-    writeJsonFile(GALLERY_FILE, gallery);
+    writeJsonFile("gallery.json", gallery);
     return newItem;
   },
   deleteGalleryItem(id: string): boolean {
     const gallery = this.getGallery();
     const filtered = gallery.filter((g) => g.id !== id);
-    writeJsonFile(GALLERY_FILE, filtered);
+    writeJsonFile("gallery.json", filtered);
     return true;
   },
 
   // --- Reviews ---
   getReviews(): CustomerReview[] {
-    return readJsonFile<CustomerReview[]>(REVIEWS_FILE, initialReviews);
+    return readJsonFile<CustomerReview[]>("reviews.json", initialReviews);
   },
 };

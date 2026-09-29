@@ -56,12 +56,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Action Row */}
         <div className="pt-3 border-t border-[var(--surface-border)] flex items-center justify-between gap-3">
           {product.startingPrice ? (
-            <span className="text-sm font-semibold text-[var(--primary)]">
+            <span className="text-sm font-bold text-[var(--primary)]">
               ₹{product.startingPrice}
             </span>
           ) : (
-            <span className="text-[11px] text-[var(--foreground-muted)]">
-              {product.sizes[0] ? `From ${product.sizes[0]}` : "Made to order"}
+            <span className="text-xs font-bold text-[var(--primary)]">
+              From ₹650
             </span>
           )}
 
