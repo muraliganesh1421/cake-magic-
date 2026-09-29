@@ -13,8 +13,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const orders = store.getOrders();
-  const order = orders.find((o) => o.id === orderId);
+  const order = store.getOrderById(orderId);
 
   if (!order) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });

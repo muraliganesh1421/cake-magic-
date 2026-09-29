@@ -105,6 +105,42 @@ const defaultSettings: BusinessSettingsData = {
   currency: "₹",
 };
 
+const defaultOrders: OrderRecord[] = [
+  {
+    id: "CM-20260929-001",
+    orderNumber: "CM-20260929-001",
+    customerName: "Priya Sharma",
+    customerPhone: "9848099999",
+    status: "PREPARING",
+    deliveryType: "DELIVERY",
+    deliveryAddress: "Near Kambala Cheruvu, Danavaipeta, Rajahmundry",
+    deliveryDate: new Date(Date.now() + 86400000).toISOString(),
+    deliveryTimeSlot: "Evening (5 PM – 7 PM)",
+    specialInstructions: "Please write 'Happy Birthday Ayaan' in golden piping.",
+    subtotal: 850,
+    deliveryFee: 50,
+    discount: 0,
+    totalAmount: 900,
+    assignedStaffId: "staff-1",
+    assignedStaffName: "Master Baker Ramesh",
+    items: [
+      {
+        id: "item-default-1",
+        productName: "Belgian Chocolate Truffle Cake",
+        flavour: "Belgian Chocolate",
+        size: "1 kg",
+        eggless: true,
+        cakeMessage: "Happy Birthday Ayaan",
+        unitPrice: 850,
+        quantity: 1,
+        totalPrice: 850,
+      },
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
 export const store = {
   // --- Business Settings ---
   getSettings(): BusinessSettingsData {
@@ -176,7 +212,7 @@ export const store = {
 
   // --- Orders ---
   getOrders(): OrderRecord[] {
-    return readJsonFile<OrderRecord[]>(ORDERS_FILE, []);
+    return readJsonFile<OrderRecord[]>(ORDERS_FILE, defaultOrders);
   },
   getOrderById(id: string): OrderRecord | undefined {
     return this.getOrders().find((o) => o.id === id || o.orderNumber === id);
