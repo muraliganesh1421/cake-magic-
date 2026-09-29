@@ -44,7 +44,7 @@ export async function PATCH(request: Request) {
     if (!body.id || !body.status) {
       return NextResponse.json({ error: "ID and status are required" }, { status: 400 });
     }
-    const updated = store.updateCustomRequestStatus(body.id, body.status);
+    const updated = store.updateCustomRequest(body.id, { status: body.status });
     if (!updated) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
     }

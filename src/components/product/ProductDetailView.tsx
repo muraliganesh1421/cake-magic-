@@ -4,9 +4,10 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/types";
-import { MessageCircle, Check, Send, Sparkles, Calendar, Clock, MapPin, CheckCircle2, ChevronRight } from "lucide-react";
-import { siteConfig, buildWhatsAppLink, WhatsAppTemplates } from "@/config/site";
+import { MessageCircle, Check, Send, Sparkles, ShoppingBag, Plus, Minus, CheckCircle2, ChevronRight, MapPin } from "lucide-react";
+import { buildWhatsAppLink } from "@/config/site";
 import ProductCard from "@/components/ui/ProductCard";
+import { useCart } from "@/context/CartContext";
 
 interface ProductDetailViewProps {
   product: Product;
@@ -17,10 +18,12 @@ export default function ProductDetailView({
   product,
   relatedProducts,
 }: ProductDetailViewProps) {
+  const { addItem } = useCart();
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState(product.sizes[0] || "");
-  const [selectedFlavour, setSelectedFlavour] = useState(product.flavours[0] || "");
+  const [selectedSize, setSelectedSize] = useState(product.sizes[0] || "1 kg");
+  const [selectedFlavour, setSelectedFlavour] = useState(product.flavours[0] || "Classic");
   const [quantity, setQuantity] = useState(1);
+  const [addedAnimation, setAddedAnimation] = useState(false);
   const [cakeMessage, setCakeMessage] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
@@ -316,9 +319,79 @@ Could you please confirm pricing and availability?`;
                 />
               </div>
             )}
+
+            {/* Direct Instant Add to Cart Card */}
+            <div className="p-5 sm:p-6 rounded-2xl bg-[var(--surface)] border-2 border-[var(--primary)]/70 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider block">
+                    Calculated Total
+                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-serif text-2xl sm:text-3xl font-bold text-[var(--primary)]">
+                      ₹{(product.startingPrice || (selectedSize.includes("500") ? 450 : selectedSize.includes("2") ? 1600 : 850)) * quantity}
+                    </span>
+                    {quantity > 1 && (
+                      <span className="text-xs text-[var(--foreground-muted)]">
+                        (₹{product.startingPrice || (selectedSize.includes("500") ? 450 : selectedSize.includes("2") ? 1600 : 850)} each)
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quantity Controls */}
+                <div className="flex items-center gap-1.5 border border-[var(--surface-border)] rounded-xl bg-[var(--surface-alt)] p-1">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--surface)] text-[var(--foreground)] transition-colors"
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="w-7 text-center font-bold text-sm text-[var(--foreground)]">
+                    {quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => q + 1)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--surface)] text-[var(--foreground)] transition-colors"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const basePrice = product.startingPrice || (selectedSize.includes("500") ? 450 : selectedSize.includes("2") ? 1600 : 850);
+                  addItem({
+                    id: `${product.id}-${selectedSize}-${selectedFlavour}-${Date.now()}`,
+                    productId: product.id,
+                    name: product.name,
+                    slug: product.slug,
+                    image: product.images[0] || "/placeholder-cake.jpg",
+                    flavour: selectedFlavour,
+                    size: selectedSize,
+                    eggless: product.eggless,
+                    cakeMessage: cakeMessage.trim() || undefined,
+                    unitPrice: basePrice,
+                    quantity,
+                  });
+                  setAddedAnimation(true);
+                  setTimeout(() => setAddedAnimation(false), 2000);
+                }}
+                className="w-full tap-target py-3.5 px-6 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] font-bold text-sm sm:text-base hover:bg-[var(--primary-hover)] active:scale-98 transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                <span>{addedAnimation ? "✓ Added to Cart!" : "Add to Cart & Checkout"}</span>
+              </button>
+            </div>
           </div>
 
-          {/* Enquiry Submission Box */}
+          {/* Enquiry / WhatsApp Box */}
           <div className="p-6 rounded-2xl bg-[var(--surface-alt)] border border-[var(--surface-border)] space-y-4">
             {submitted ? (
               <div className="text-center py-4 space-y-3">

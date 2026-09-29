@@ -32,13 +32,13 @@ export default function Hero() {
               Handcrafted celebration cakes, bespoke creations and fresh patisserie, baked for life&apos;s sweetest moments in Rajahmundry.
             </p>
 
-            {/* Primary & Secondary CTAs */}
+            {/* Exactly 3 Primary Actions (Section 4 Master Rule) */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
               <Link
                 href="/cakes"
                 className="tap-target px-7 py-3.5 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] text-sm font-semibold hover:bg-[var(--primary-hover)] transition-colors shadow-xs flex items-center justify-center gap-2 group"
               >
-                <span>Explore Cakes</span>
+                <span>ORDER NOW</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
 
@@ -46,8 +46,15 @@ export default function Hero() {
                 href="/custom-cakes"
                 className="tap-target px-6 py-3.5 rounded-xl bg-[var(--surface)] border border-[var(--surface-border-strong)] text-[var(--foreground)] text-sm font-semibold hover:bg-[var(--surface-alt)] transition-colors flex items-center justify-center gap-2"
               >
-                <Sparkles className="w-4 h-4 text-[var(--accent-blush-dark)]" />
-                <span>Create Your Cake</span>
+                <Sparkles className="w-4 h-4 text-[var(--accent)]" />
+                <span>CUSTOMIZE YOUR CAKE</span>
+              </Link>
+
+              <Link
+                href="/track"
+                className="tap-target px-5 py-3.5 rounded-xl bg-[var(--surface-alt)] border border-[var(--surface-border)] text-[var(--foreground)] text-sm font-semibold hover:bg-[var(--surface-border)]/50 transition-colors flex items-center justify-center gap-1.5"
+              >
+                <span>TRACK MY ORDER</span>
               </Link>
             </div>
 

@@ -4,22 +4,24 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Search, Menu, X, MessageCircle, Sparkles, ChevronRight, Phone } from "lucide-react";
+import { Search, Menu, X, MessageCircle, Sparkles, ChevronRight, Phone, ShoppingBag } from "lucide-react";
 import { siteConfig, buildWhatsAppLink, WhatsAppTemplates } from "@/config/site";
 import SearchModal from "./SearchModal";
+import { useCart } from "@/context/CartContext";
 
 export default function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const { itemCount, setIsCartOpen } = useCart();
 
   const navLinks = [
     { label: "Home", href: "/" },
-    { label: "Cakes", href: "/cakes" },
+    { label: "Order Now", href: "/cakes" },
     { label: "Custom Cakes", href: "/custom-cakes", highlight: true },
+    { label: "Track Order", href: "/track" },
     { label: "Desserts", href: "/desserts" },
     { label: "Bakery", href: "/bakery" },
-    { label: "Celebrations", href: "/celebrations" },
     { label: "Gallery", href: "/gallery" },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },
@@ -98,6 +100,21 @@ export default function Header() {
                 aria-label="Search cakes and treats"
               >
                 <Search className="w-5 h-5" />
+              </button>
+
+              {/* Cart Drawer Trigger */}
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(true)}
+                className="relative tap-target flex items-center justify-center p-2 rounded-xl text-[var(--foreground)] hover:bg-[var(--surface-alt)] transition-colors"
+                aria-label={`View cart (${itemCount} items)`}
+              >
+                <ShoppingBag className="w-5 h-5 text-[var(--primary)]" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[var(--primary)] text-[var(--background)] text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
+                    {itemCount}
+                  </span>
+                )}
               </button>
 
               {/* WhatsApp / Quick Order CTA (Desktop) */}

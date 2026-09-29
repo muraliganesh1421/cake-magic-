@@ -4,7 +4,8 @@ import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
-import { siteConfig } from "@/config/site";
+import { CartProvider } from "@/context/CartContext";
+import CartDrawer from "@/components/cart/CartDrawer";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -89,18 +90,21 @@ export default function RootLayout({
       className={`${playfair.variable} ${jakarta.variable} scroll-smooth antialiased`}
     >
       <body className="min-h-screen flex flex-col bg-[var(--background)] text-[var(--foreground)] font-sans pb-16 md:pb-0">
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-[var(--primary)] focus:text-[var(--primary-foreground)] focus:top-2 focus:left-2 rounded-md shadow-lg outline-none"
-        >
-          Skip to main content
-        </a>
-        <Header />
-        <main id="main-content" className="flex-1 flex flex-col">
-          {children}
-        </main>
-        <Footer />
-        <MobileBottomNav />
+        <CartProvider>
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-[var(--primary)] focus:text-[var(--primary-foreground)] focus:top-2 focus:left-2 rounded-md shadow-lg outline-none"
+          >
+            Skip to main content
+          </a>
+          <Header />
+          <main id="main-content" className="flex-1 flex flex-col">
+            {children}
+          </main>
+          <Footer />
+          <MobileBottomNav />
+          <CartDrawer />
+        </CartProvider>
       </body>
     </html>
   );

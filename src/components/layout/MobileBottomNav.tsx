@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Compass, Wand2, ClipboardList, MessageCircle } from "lucide-react";
-import { buildWhatsAppLink, WhatsAppTemplates } from "@/config/site";
+import { Home, CakeSlice, Wand2, SearchCheck, ShoppingBag } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
+  const { itemCount, setIsCartOpen } = useCart();
 
   // Hide on admin routes
   if (pathname.startsWith("/admin")) {
@@ -15,9 +16,9 @@ export default function MobileBottomNav() {
 
   const items = [
     { label: "Home", href: "/", icon: Home },
-    { label: "Explore", href: "/cakes", icon: Compass },
-    { label: "Custom", href: "/custom-cakes", icon: Wand2, highlight: true },
-    { label: "Orders", href: "/custom-cakes/status", icon: ClipboardList },
+    { label: "Order Now", href: "/cakes", icon: CakeSlice },
+    { label: "Customize", href: "/custom-cakes", icon: Wand2, highlight: true },
+    { label: "Track", href: "/track", icon: SearchCheck },
   ];
 
   return (
@@ -37,7 +38,7 @@ export default function MobileBottomNav() {
               }`}
             >
               {item.highlight && (
-                <span className="absolute -top-1 right-1/4 w-2 h-2 rounded-full bg-[var(--accent-blush-dark)]"></span>
+                <span className="absolute -top-1 right-1/4 w-2 h-2 rounded-full bg-[var(--accent)]"></span>
               )}
               <Icon className={`w-5 h-5 ${isActive ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
               <span className="text-[10px] mt-1 tracking-tight">{item.label}</span>
@@ -45,19 +46,23 @@ export default function MobileBottomNav() {
           );
         })}
 
-        {/* WhatsApp Link as fifth tab */}
-        <a
-          href={buildWhatsAppLink(WhatsAppTemplates.generalEnquiry())}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-col items-center justify-center tap-target text-[var(--success)] hover:text-[var(--primary)] transition-colors"
-          aria-label="Chat on WhatsApp"
+        {/* Cart Trigger with Live Count */}
+        <button
+          type="button"
+          onClick={() => setIsCartOpen(true)}
+          className="flex flex-col items-center justify-center tap-target relative text-[var(--foreground-muted)] hover:text-[var(--primary)] transition-colors"
+          aria-label={`View Cart (${itemCount} items)`}
         >
-          <div className="w-8 h-8 rounded-full bg-[var(--badge-eggless-bg)] flex items-center justify-center text-[var(--success)] shadow-xs">
-            <MessageCircle className="w-4 h-4 stroke-[2]" />
+          <div className="relative">
+            <ShoppingBag className="w-5 h-5 stroke-[1.75]" />
+            {itemCount > 0 && (
+              <span className="absolute -top-1.5 -right-2 bg-[var(--primary)] text-[var(--background)] text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                {itemCount}
+              </span>
+            )}
           </div>
-          <span className="text-[10px] mt-0.5 tracking-tight font-medium text-[var(--success)]">WhatsApp</span>
-        </a>
+          <span className="text-[10px] mt-1 tracking-tight font-medium">Cart</span>
+        </button>
       </nav>
     </div>
   );

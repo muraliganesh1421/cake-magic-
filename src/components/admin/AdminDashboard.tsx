@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import {
   Product,
@@ -9,41 +9,67 @@ import {
   GalleryItem,
   CustomRequestStatus,
   ProductCategory,
+  OrderRecord,
+  StaffMember,
+  BusinessSettingsData,
+  OrderStatusType,
 } from "@/types";
+import { AutomationLogEntry } from "@/lib/events";
 import {
   LayoutDashboard,
   Package,
   Sparkles,
-  MessageSquare,
   Images,
   LogOut,
   Plus,
   Trash2,
   Edit2,
-  CheckCircle2,
-  Clock,
   Calendar,
-  AlertCircle,
-  Eye,
   RefreshCw,
   Search,
+  Users,
+  Settings,
+  Activity,
+  Truck,
+  ShieldCheck,
+  UserCheck,
 } from "lucide-react";
+
+type AdminTab =
+  | "overview"
+  | "orders"
+  | "products"
+  | "custom-cakes"
+  | "customers"
+  | "staff"
+  | "settings"
+  | "automation-logs"
+  | "gallery";
 
 export default function AdminDashboard() {
   const [authenticated, setAuthenticated] = useState(false);
   const [passcode, setPasscode] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
   const [authError, setAuthError] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "products" | "custom-requests" | "enquiries" | "gallery"
-  >("overview");
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
 
   // Data states
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [customRequests, setCustomRequests] = useState<CustomCakeRequest[]>([]);
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [settings, setSettings] = useState<BusinessSettingsData | null>(null);
+  const [automationLogs, setAutomationLogs] = useState<AutomationLogEntry[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Filters & Search
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("ALL");
+  const [productCategoryFilter, setProductCategoryFilter] = useState<string>("all");
 
   // Product Form Modal
   const [productModalOpen, setProductModalOpen] = useState(false);
@@ -60,40 +86,170 @@ export default function AdminDashboard() {
     featured: false,
   });
 
-  const checkAuth = () => {
-    // Default admin code for Cake Magic administration
-    if (passcode === "cakemagic2026" || passcode === "admin123") {
-      setAuthenticated(true);
-      setAuthError("");
-      loadAllData();
-    } else {
-      setAuthError("Incorrect admin credentials.");
-    }
-  };
+  // Staff Form Modal
+  const [staffModalOpen, setStaffModalOpen] = useState(false);
+  const [newStaff, setNewStaff] = useState<Partial<StaffMember>>({
+    name: "",
+    phone: "",
+    role: "BAKER",
+    dutyStatus: "ON_DUTY",
+    active: true,
+  });
 
-  const loadAllData = async () => {
+  // Settings form saving state
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsSuccess, setSettingsSuccess] = useState(false);
+
+  // Check existing session token on mount
+  useEffect(() => {
+    const token = localStorage.getItem("cakemagic_admin_token");
+    if (token) {
+      fetch("/api/admin/verify", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => {
+          if (res.ok) {
+            setAuthenticated(true);
+          } else {
+            localStorage.removeItem("cakemagic_admin_token");
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem("cakemagic_admin_token");
+        });
+    }
+  }, []);
+
+  const loadAllData = useCallback(async () => {
     setLoading(true);
     try {
-      const [prodRes, reqRes, enqRes, galRes] = await Promise.all([
-        fetch("/api/products"),
-        fetch("/api/custom-requests"),
-        fetch("/api/enquiries"),
-        fetch("/api/gallery"),
+      const [
+        ordersRes,
+        prodRes,
+        reqRes,
+        enqRes,
+        galRes,
+        staffRes,
+        settingsRes,
+        logsRes,
+      ] = await Promise.all([
+        fetch("/api/orders").catch(() => null),
+        fetch("/api/products").catch(() => null),
+        fetch("/api/custom-requests").catch(() => null),
+        fetch("/api/enquiries").catch(() => null),
+        fetch("/api/gallery").catch(() => null),
+        fetch("/api/staff").catch(() => null),
+        fetch("/api/settings").catch(() => null),
+        fetch("/api/admin/logs").catch(() => null),
       ]);
 
-      if (prodRes.ok) setProducts(await prodRes.json());
-      if (reqRes.ok) setCustomRequests(await reqRes.json());
-      if (enqRes.ok) setEnquiries(await enqRes.json());
-      if (galRes.ok) setGallery(await galRes.json());
+      if (ordersRes?.ok) {
+        const oData = await ordersRes.json();
+        setOrders(Array.isArray(oData) ? oData : []);
+      }
+      if (prodRes?.ok) setProducts(await prodRes.json());
+      if (reqRes?.ok) setCustomRequests(await reqRes.json());
+      if (enqRes?.ok) setEnquiries(await enqRes.json());
+      if (galRes?.ok) setGallery(await galRes.json());
+      if (staffRes?.ok) setStaff(await staffRes.json());
+      if (settingsRes?.ok) setSettings(await settingsRes.json());
+      if (logsRes?.ok) setAutomationLogs(await logsRes.json());
     } catch (err) {
       console.error("Failed to load admin data", err);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    if (authenticated) {
+      const timer = setTimeout(() => {
+        loadAllData();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [authenticated, loadAllData]);
+
+  // Server-side Authentication
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthLoading(true);
+
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: authEmail || "owner@cakemagic.in",
+          password: passcode,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setAuthError(data.error || "Invalid credentials.");
+      } else {
+        localStorage.setItem("cakemagic_admin_token", data.token);
+        setAuthenticated(true);
+      }
+    } catch {
+      setAuthError("Network error. Please try again.");
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
-  // Status updates
-  const handleUpdateStatus = async (id: string, status: CustomRequestStatus) => {
+  const handleLogout = () => {
+    localStorage.removeItem("cakemagic_admin_token");
+    setAuthenticated(false);
+    setPasscode("");
+  };
+
+  // Order Actions
+  const handleUpdateOrderStatus = async (orderId: string, status: OrderStatusType) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+        // Refresh logs too as automation events trigger on status update
+        fetch("/api/admin/logs")
+          .then((r) => r.json())
+          .then(setAutomationLogs)
+          .catch(() => null);
+      }
+    } catch {
+      alert("Failed to update order status");
+    }
+  };
+
+  const handleReassignStaff = async (orderId: string, staffId: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ staffId }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+        fetch("/api/staff")
+          .then((r) => r.json())
+          .then(setStaff)
+          .catch(() => null);
+      }
+    } catch {
+      alert("Failed to reassign staff");
+    }
+  };
+
+  // Custom Request Actions
+  const handleUpdateCustomStatus = async (id: string, status: CustomRequestStatus) => {
     try {
       const res = await fetch("/api/custom-requests", {
         method: "PATCH",
@@ -106,12 +262,81 @@ export default function AdminDashboard() {
           prev.map((r) => (r.id === id ? { ...r, status: updated.status } : r))
         );
       }
-    } catch (e) {
-      alert("Failed to update status");
+    } catch {
+      alert("Failed to update custom request status");
     }
   };
 
-  // Product save
+  // Staff Actions
+  const handleToggleDuty = async (staffMember: StaffMember) => {
+    const nextStatus = staffMember.dutyStatus === "ON_DUTY" ? "OFF_DUTY" : "ON_DUTY";
+    try {
+      const res = await fetch("/api/staff", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ staffId: staffMember.id, dutyStatus: nextStatus }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setStaff((prev) => prev.map((s) => (s.id === staffMember.id ? updated : s)));
+      }
+    } catch {
+      alert("Failed to update staff duty status");
+    }
+  };
+
+  const handleAddStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStaff.name || !newStaff.phone) return;
+    try {
+      const res = await fetch("/api/staff", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          staffId: `staff-${Date.now()}`,
+          updates: {
+            ...newStaff,
+            id: `staff-${Date.now()}`,
+            activeOrderCount: 0,
+            active: true,
+          },
+        }),
+      });
+      if (res.ok) {
+        setStaffModalOpen(false);
+        setNewStaff({ name: "", phone: "", role: "BAKER", dutyStatus: "ON_DUTY", active: true });
+        loadAllData();
+      }
+    } catch {
+      alert("Failed to add staff member");
+    }
+  };
+
+  // Settings Save
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!settings) return;
+    setSavingSettings(true);
+    setSettingsSuccess(false);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+      if (res.ok) {
+        setSettings(await res.json());
+        setSettingsSuccess(true);
+        setTimeout(() => setSettingsSuccess(false), 3000);
+      }
+    } catch {
+      alert("Failed to save settings");
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  // Product CRUD
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct?.name || !editingProduct?.category) return;
@@ -122,12 +347,14 @@ export default function AdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...editingProduct,
-          flavours: typeof editingProduct.flavours === "string"
-            ? (editingProduct.flavours as string).split(",").map((s) => s.trim())
-            : editingProduct.flavours || ["Belgian Chocolate"],
-          sizes: typeof editingProduct.sizes === "string"
-            ? (editingProduct.sizes as string).split(",").map((s) => s.trim())
-            : editingProduct.sizes || ["500 g", "1 kg"],
+          flavours:
+            typeof editingProduct.flavours === "string"
+              ? (editingProduct.flavours as string).split(",").map((s) => s.trim())
+              : editingProduct.flavours || ["Belgian Chocolate"],
+          sizes:
+            typeof editingProduct.sizes === "string"
+              ? (editingProduct.sizes as string).split(",").map((s) => s.trim())
+              : editingProduct.sizes || ["500 g", "1 kg"],
           images: editingProduct.images?.length
             ? editingProduct.images
             : ["https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=800&auto=format&fit=crop"],
@@ -144,7 +371,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Product delete
   const handleDeleteProduct = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
@@ -157,7 +383,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // Gallery add
+  // Gallery CRUD
   const handleAddGallery = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -183,7 +409,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Gallery delete
   const handleDeleteGallery = async (id: string) => {
     if (!confirm("Delete this gallery item?")) return;
     try {
@@ -196,19 +421,125 @@ export default function AdminDashboard() {
     }
   };
 
-  // KPIs
-  const todayEnquiriesCount = enquiries.length;
-  const customRequestsCount = customRequests.length;
-  const pendingConfirmationsCount = customRequests.filter(
-    (r) => r.status === "New" || r.status === "Reviewing"
-  ).length;
-  const confirmedDeliveriesCount = customRequests.filter(
-    (r) => r.status === "Confirmed"
-  ).length;
+  // Derived Customers List
+  const customersList = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        name: string;
+        phone: string;
+        totalOrders: number;
+        totalSpent: number;
+        lastOrderDate: string;
+      }
+    >();
 
+    orders.forEach((o) => {
+      const cleanPhone = o.customerPhone.replace(/\D/g, "");
+      const existing = map.get(cleanPhone) || {
+        name: o.customerName,
+        phone: o.customerPhone,
+        totalOrders: 0,
+        totalSpent: 0,
+        lastOrderDate: o.createdAt,
+      };
+      existing.totalOrders += 1;
+      existing.totalSpent += o.totalAmount || 0;
+      if (new Date(o.createdAt) > new Date(existing.lastOrderDate)) {
+        existing.lastOrderDate = o.createdAt;
+      }
+      map.set(cleanPhone, existing);
+    });
+
+    customRequests.forEach((r) => {
+      const cleanPhone = r.phone.replace(/\D/g, "");
+      if (!map.has(cleanPhone)) {
+        map.set(cleanPhone, {
+          name: r.customerName,
+          phone: r.phone,
+          totalOrders: 1,
+          totalSpent: 0,
+          lastOrderDate: r.createdAt,
+        });
+      }
+    });
+
+    enquiries.forEach((e) => {
+      const cleanPhone = e.phone.replace(/\D/g, "");
+      if (!map.has(cleanPhone)) {
+        map.set(cleanPhone, {
+          name: e.customer,
+          phone: e.phone,
+          totalOrders: 1,
+          totalSpent: 0,
+          lastOrderDate: e.createdAt,
+        });
+      }
+    });
+
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.lastOrderDate).getTime() - new Date(a.lastOrderDate).getTime()
+    );
+  }, [orders, customRequests, enquiries]);
+
+  // KPIs
+  const totalRevenue = useMemo(
+    () =>
+      orders
+        .filter((o) => !["CANCELLED", "REFUNDED"].includes(o.status))
+        .reduce((sum, o) => sum + (o.totalAmount || 0), 0),
+    [orders]
+  );
+  const activeOrdersCount = useMemo(
+    () => orders.filter((o) => !["DELIVERED", "CANCELLED", "REFUNDED"].includes(o.status)).length,
+    [orders]
+  );
+  const todayOrdersCount = useMemo(() => {
+    const today = new Date().toDateString();
+    return orders.filter(
+      (o) =>
+        new Date(o.createdAt).toDateString() === today ||
+        new Date(o.deliveryDate).toDateString() === today
+    ).length;
+  }, [orders]);
+  const onDutyStaffCount = useMemo(
+    () => staff.filter((s) => s.dutyStatus === "ON_DUTY" && s.active).length,
+    [staff]
+  );
+  const pendingCustomCount = useMemo(
+    () => customRequests.filter((c) => c.status === "New" || c.status === "Reviewing").length,
+    [customRequests]
+  );
+
+  // Filtered Orders
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
+      const matchesStatus =
+        orderStatusFilter === "ALL" || o.status === orderStatusFilter;
+      const q = orderSearch.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        o.id.toLowerCase().includes(q) ||
+        o.customerName.toLowerCase().includes(q) ||
+        o.customerPhone.includes(q);
+      return matchesStatus && matchesSearch;
+    });
+  }, [orders, orderStatusFilter, orderSearch]);
+
+  // Filtered Products
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      return (
+        productCategoryFilter === "all" ||
+        p.category.toLowerCase() === productCategoryFilter.toLowerCase()
+      );
+    });
+  }, [products, productCategoryFilter]);
+
+  // --- LOGIN SCREEN ---
   if (!authenticated) {
     return (
-      <div className="min-h-[75vh] flex items-center justify-center px-4 py-12">
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md bg-[var(--surface)] p-8 rounded-3xl border border-[var(--surface-border)] shadow-xl text-center space-y-6">
           <div className="flex flex-col items-center">
             <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-[var(--surface-border-strong)]/60 shadow-md mb-3 bg-[#F9F6F0]">
@@ -225,28 +556,35 @@ export default function AdminDashboard() {
               Cake Magic
             </span>
             <span className="block text-xs uppercase tracking-widest text-[var(--foreground-muted)] mt-1">
-              Rajahmundry &bull; Store Admin Portal
+              Rajahmundry &bull; Owner Administration Hub
             </span>
           </div>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              checkAuth();
-            }}
-            className="space-y-4 text-left"
-          >
+          <form onSubmit={handleLogin} className="space-y-4 text-left">
             <div>
               <label className="block text-xs font-semibold text-[var(--foreground-muted)] mb-1">
-                Admin Passcode
+                Admin Email (Optional)
+              </label>
+              <input
+                type="email"
+                placeholder="owner@cakemagic.in"
+                value={authEmail}
+                onChange={(e) => setAuthEmail(e.target.value)}
+                className="w-full text-sm p-3 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-[var(--foreground)]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[var(--foreground-muted)] mb-1">
+                Owner Passcode / Password *
               </label>
               <input
                 type="password"
-                placeholder="Enter passcode (e.g. cakemagic2026)"
+                placeholder="Enter owner password"
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value)}
                 autoFocus
-                className="w-full text-sm p-3 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                required
+                className="w-full text-sm p-3 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-[var(--foreground)]"
               />
             </div>
 
@@ -258,14 +596,16 @@ export default function AdminDashboard() {
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] text-xs font-bold uppercase tracking-wider hover:bg-[var(--primary-hover)] transition-all shadow-md"
+              disabled={authLoading}
+              className="w-full py-3.5 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] font-bold text-sm shadow-md hover:bg-[var(--primary-hover)] active:scale-98 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
             >
-              Sign In to Dashboard
+              <ShieldCheck className="w-4 h-4" />
+              <span>{authLoading ? "Verifying…" : "Authenticate & Enter Hub"}</span>
             </button>
           </form>
 
-          <p className="text-[11px] text-[var(--foreground-subtle)]">
-            Owner credentials required to access orders and product configuration.
+          <p className="text-[11px] text-[var(--foreground-muted)]">
+            Secured with HMAC-SHA256 session encryption.
           </p>
         </div>
       </div>
@@ -273,300 +613,690 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
-      {/* Top Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[var(--surface-border)]">
-        <div className="flex items-center gap-3.5">
-          <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[var(--surface-border-strong)]/60 shadow-xs shrink-0 bg-[#F9F6F0]">
-            <Image
-              src="/logo.jpg"
-              alt="Cake Magic Logo"
-              fill
-              sizes="48px"
-              className="object-contain p-0.5"
-            />
-          </div>
-          <div>
-            <span className="text-xs uppercase tracking-widest font-semibold text-[var(--foreground-muted)]">
-              Store Administration &bull; Rajahmundry
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Top Header */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[var(--surface-border)]">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-xs uppercase tracking-widest text-[var(--foreground-muted)] font-semibold">
+              Live Production Operations
             </span>
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[var(--foreground)] mt-0.5">
-              Cake Magic Management Hub
-            </h1>
           </div>
+          <h1 className="font-serif text-3xl font-bold text-[var(--foreground)] mt-1">
+            Cake Magic Owner Command Hub
+          </h1>
+          <p className="text-xs text-[var(--foreground-muted)]">
+            Rajahmundry &bull; Store ID: CM-RJY-01
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             onClick={loadAllData}
             disabled={loading}
-            className="tap-target px-3.5 py-2 rounded-xl border border-[var(--surface-border)] text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--surface-alt)] transition-colors flex items-center gap-1.5"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--surface-border)] bg-[var(--surface)] text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--surface-alt)] transition-colors shadow-2xs"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span>Sync</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-[var(--primary)]" : ""}`} />
+            <span>Refresh</span>
           </button>
+
           <button
-            onClick={() => setAuthenticated(false)}
-            className="tap-target px-3.5 py-2 rounded-xl bg-[var(--surface-alt)] text-xs font-semibold text-[var(--foreground-muted)] hover:text-red-600 transition-colors flex items-center gap-1.5"
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-red-200 bg-red-50 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors shadow-2xs"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Logout</span>
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Navigation Tabs */}
-      <div className="flex overflow-x-auto gap-2 border-b border-[var(--surface-border)] pb-2">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-[var(--surface-border)] scrollbar-none">
         {[
-          { id: "overview", label: "Dashboard Overview", icon: LayoutDashboard },
-          { id: "custom-requests", label: `Custom Requests (${customRequests.length})`, icon: Sparkles },
-          { id: "enquiries", label: `Product Enquiries (${enquiries.length})`, icon: MessageSquare },
-          { id: "products", label: `Products (${products.length})`, icon: Package },
+          { id: "overview", label: "Overview", icon: LayoutDashboard },
+          { id: "orders", label: `Orders (${orders.length})`, icon: Package },
+          { id: "products", label: `Products (${products.length})`, icon: Sparkles },
+          { id: "custom-cakes", label: `Custom Cakes (${customRequests.length})`, icon: Calendar },
+          { id: "customers", label: `Customers (${customersList.length})`, icon: Users },
+          { id: "staff", label: `Staff (${staff.length})`, icon: UserCheck },
+          { id: "settings", label: "Settings", icon: Settings },
+          { id: "automation-logs", label: `Automation (${automationLogs.length})`, icon: Activity },
           { id: "gallery", label: `Gallery (${gallery.length})`, icon: Images },
         ].map((tab) => {
           const Icon = tab.icon;
-          const active = activeTab === tab.id;
+          const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`tap-target px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
-                active
+              onClick={() => setActiveTab(tab.id as AdminTab)}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                isActive
                   ? "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-xs"
-                  : "bg-[var(--surface)] text-[var(--foreground-muted)] hover:bg-[var(--surface-alt)] border border-[var(--surface-border)]"
+                  : "text-[var(--foreground-muted)] hover:bg-[var(--surface-alt)] hover:text-[var(--foreground)]"
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* OVERVIEW TAB */}
+      {/* --- TAB: OVERVIEW --- */}
       {activeTab === "overview" && (
         <div className="space-y-8">
           {/* KPI Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <div className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs space-y-1">
-              <span className="text-xs uppercase font-bold text-[var(--foreground-muted)]">
-                Today&apos;s Enquiries
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs">
+              <span className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider block">
+                Total Revenue
               </span>
-              <div className="font-serif text-3xl font-bold text-[var(--foreground)]">
-                {todayEnquiriesCount}
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="font-serif text-3xl font-bold text-[var(--primary)]">
+                  ₹{totalRevenue.toLocaleString("en-IN")}
+                </span>
+                <span className="text-[11px] text-emerald-600 font-semibold">Active Orders</span>
               </div>
-              <span className="text-[11px] text-[var(--foreground-subtle)]">Direct catalogue leads</span>
+              <p className="text-[11px] text-[var(--foreground-muted)] mt-1">
+                {orders.length} total orders recorded
+              </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs space-y-1">
-              <span className="text-xs uppercase font-bold text-[var(--accent-blush-dark)]">
-                Custom Requests
+            <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs">
+              <span className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider block">
+                In Kitchen / Delivery
               </span>
-              <div className="font-serif text-3xl font-bold text-[var(--foreground)]">
-                {customRequestsCount}
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="font-serif text-3xl font-bold text-amber-600">
+                  {activeOrdersCount}
+                </span>
+                <span className="text-[11px] text-[var(--foreground-muted)]">Active Orders</span>
               </div>
-              <span className="text-[11px] text-[var(--foreground-subtle)]">Custom designer cakes</span>
+              <p className="text-[11px] text-[var(--foreground-muted)] mt-1">
+                {todayOrdersCount} scheduled for today
+              </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs space-y-1">
-              <span className="text-xs uppercase font-bold text-amber-600">
-                Pending Confirmation
+            <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs">
+              <span className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider block">
+                Custom Enquiries
               </span>
-              <div className="font-serif text-3xl font-bold text-amber-600">
-                {pendingConfirmationsCount}
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="font-serif text-3xl font-bold text-purple-600">
+                  {pendingCustomCount}
+                </span>
+                <span className="text-[11px] text-[var(--foreground-muted)]">Needs Review</span>
               </div>
-              <span className="text-[11px] text-[var(--foreground-subtle)]">Awaiting quote/review</span>
+              <p className="text-[11px] text-[var(--foreground-muted)] mt-1">
+                {customRequests.length} total custom requests
+              </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs space-y-1">
-              <span className="text-xs uppercase font-bold text-[var(--badge-eggless-text)]">
-                Confirmed Orders
+            <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs">
+              <span className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider block">
+                Kitchen Team on Duty
               </span>
-              <div className="font-serif text-3xl font-bold text-[var(--badge-eggless-text)]">
-                {confirmedDeliveriesCount}
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="font-serif text-3xl font-bold text-emerald-600">
+                  {onDutyStaffCount} / {staff.length}
+                </span>
               </div>
-              <span className="text-[11px] text-[var(--foreground-subtle)]">Scheduled for kitchen</span>
+              <p className="text-[11px] text-[var(--foreground-muted)] mt-1">
+                Auto-assigned to active kitchen members
+              </p>
             </div>
           </div>
 
-          {/* Quick Actions Bar */}
-          <div className="p-6 rounded-2xl bg-[var(--surface-alt)] border border-[var(--surface-border)]">
-            <h2 className="font-serif text-base font-bold text-[var(--foreground)] mb-3">
-              Quick Admin Actions
-            </h2>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => {
-                  setEditingProduct({
-                    name: "",
-                    category: "cakes",
-                    subcategory: "Chocolate",
-                    description: "",
-                    flavours: ["Belgian Dark Chocolate"],
-                    sizes: ["500 g", "1 kg", "2 kg"],
-                    startingPrice: null,
-                    eggless: true,
-                    customizable: true,
-                    availableToday: true,
-                    advanceOrderRequired: false,
-                    featured: false,
-                    active: true,
-                    images: ["https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=800&auto=format&fit=crop"],
-                  });
-                  setProductModalOpen(true);
-                }}
-                className="tap-target px-4 py-2.5 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] text-xs font-semibold hover:bg-[var(--primary-hover)] flex items-center gap-1.5 shadow-xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Product</span>
-              </button>
+          {/* Recent Orders & Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-[var(--surface)] p-6 rounded-2xl border border-[var(--surface-border)] shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-serif text-lg font-bold text-[var(--foreground)]">
+                  Recent Customer Orders
+                </h2>
+                <button
+                  onClick={() => setActiveTab("orders")}
+                  className="text-xs font-semibold text-[var(--primary)] hover:underline"
+                >
+                  View all ({orders.length}) &rarr;
+                </button>
+              </div>
 
-              <button
-                onClick={() => setGalleryModalOpen(true)}
-                className="tap-target px-4 py-2.5 rounded-xl border border-[var(--surface-border-strong)] bg-[var(--surface)] text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--surface-alt)] flex items-center gap-1.5"
-              >
-                <Images className="w-3.5 h-3.5 text-[var(--primary)]" />
-                <span>Upload to Gallery</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab("custom-requests")}
-                className="tap-target px-4 py-2.5 rounded-xl border border-[var(--surface-border-strong)] bg-[var(--surface)] text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--surface-alt)] flex items-center gap-1.5"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-[var(--accent-blush-dark)]" />
-                <span>Review Custom Orders</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Recent Custom Requests Snippet */}
-          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--surface-border)] shadow-xs">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-serif text-lg font-bold text-[var(--foreground)]">
-                Recent Custom Cake Inquiries
-              </h2>
-              <button
-                onClick={() => setActiveTab("custom-requests")}
-                className="text-xs font-semibold text-[var(--primary)] hover:underline"
-              >
-                View All &rarr;
-              </button>
-            </div>
-
-            <div className="divide-y divide-[var(--surface-border)]">
-              {customRequests.slice(0, 4).map((req) => (
-                <div key={req.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <span className="text-[10px] font-bold text-[var(--foreground-muted)] uppercase">
-                      {req.id} &bull; {req.occasion}
-                    </span>
-                    <h3 className="font-semibold text-sm text-[var(--foreground)]">
-                      {req.customerName} ({req.phone}) &bull; {req.flavour} ({req.size})
-                    </h3>
-                    <p className="text-xs text-[var(--foreground-muted)] mt-0.5">
-                      Date: {req.deliveryDate || "Pending"} &bull; {req.deliveryType}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={req.status}
-                      onChange={(e) =>
-                        handleUpdateStatus(req.id, e.target.value as CustomRequestStatus)
-                      }
-                      className="text-xs py-1.5 px-2.5 rounded-lg border border-[var(--surface-border)] bg-[var(--surface-alt)] font-semibold"
+              {orders.length === 0 ? (
+                <div className="text-center py-10 text-xs text-[var(--foreground-muted)]">
+                  No orders placed yet. Test the checkout flow!
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {orders.slice(0, 5).map((o) => (
+                    <div
+                      key={o.id}
+                      className="p-3.5 rounded-xl border border-[var(--surface-border)] flex items-center justify-between hover:bg-[var(--surface-alt)] transition-colors"
                     >
-                      <option value="New">New</option>
-                      <option value="Reviewing">Reviewing</option>
-                      <option value="Confirmed">Confirmed</option>
-                      <option value="Payment Pending">Payment Pending</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-[var(--primary)]">
+                            {o.id}
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[var(--surface-alt)] text-[var(--foreground)]">
+                            {o.status}
+                          </span>
+                        </div>
+                        <p className="text-xs font-bold text-[var(--foreground)]">
+                          {o.customerName} &bull; {o.customerPhone}
+                        </p>
+                        <p className="text-[11px] text-[var(--foreground-muted)]">
+                          {o.items?.length || 0} item(s) &bull; {o.deliveryType} &bull; Assigned:{" "}
+                          <span className="font-semibold text-[var(--foreground)]">
+                            {o.assignedStaffName || "Unassigned"}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-bold text-sm text-[var(--foreground)]">
+                          ₹{o.totalAmount}
+                        </span>
+                        <p className="text-[10px] text-[var(--foreground-muted)]">
+                          {new Date(o.createdAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Quick Actions & Business Info */}
+            <div className="space-y-4">
+              <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--surface-border)] shadow-xs space-y-3">
+                <h3 className="font-serif text-sm font-bold text-[var(--foreground)]">
+                  Quick Actions
+                </h3>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => {
+                      setEditingProduct({
+                        name: "",
+                        category: "cakes",
+                        startingPrice: 650,
+                        eggless: true,
+                        featured: false,
+                        availableToday: true,
+                        flavours: ["Belgian Chocolate", "Vanilla Bean"],
+                        sizes: ["500 g", "1 kg"],
+                      });
+                      setProductModalOpen(true);
+                    }}
+                    className="w-full text-left p-3 rounded-xl bg-[var(--surface-alt)] hover:bg-[var(--surface-border)]/50 transition-colors text-xs font-semibold text-[var(--foreground)] flex items-center justify-between"
+                  >
+                    <span>+ Add New Product</span>
+                    <Plus className="w-3.5 h-3.5 text-[var(--primary)]" />
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("staff")}
+                    className="w-full text-left p-3 rounded-xl bg-[var(--surface-alt)] hover:bg-[var(--surface-border)]/50 transition-colors text-xs font-semibold text-[var(--foreground)] flex items-center justify-between"
+                  >
+                    <span>Manage Staff & Duty Shifts</span>
+                    <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("automation-logs")}
+                    className="w-full text-left p-3 rounded-xl bg-[var(--surface-alt)] hover:bg-[var(--surface-border)]/50 transition-colors text-xs font-semibold text-[var(--foreground)] flex items-center justify-between"
+                  >
+                    <span>View Automation Event Logs</span>
+                    <Activity className="w-3.5 h-3.5 text-blue-600" />
+                  </button>
+                </div>
+              </div>
+
+              {settings && (
+                <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--surface-border)] shadow-xs text-xs space-y-2">
+                  <h3 className="font-serif text-sm font-bold text-[var(--foreground)]">
+                    Current Store Status
+                  </h3>
+                  <div className="flex justify-between py-1 border-b border-[var(--surface-border)]">
+                    <span className="text-[var(--foreground-muted)]">Accepting Orders</span>
+                    <span className={`font-bold ${settings.acceptingOrders ? "text-emerald-600" : "text-red-500"}`}>
+                      {settings.acceptingOrders ? "Open" : "Closed"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-[var(--surface-border)]">
+                    <span className="text-[var(--foreground-muted)]">Min Preparation</span>
+                    <span className="font-bold text-[var(--foreground)]">
+                      {settings.minPreparationHours} hrs
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-[var(--foreground-muted)]">Delivery Charge</span>
+                    <span className="font-bold text-[var(--foreground)]">
+                      ₹{settings.deliveryCharge} (Free above ₹{settings.freeDeliveryThreshold})
+                    </span>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* CUSTOM REQUESTS TAB */}
-      {activeTab === "custom-requests" && (
-        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--surface-border)] overflow-hidden shadow-xs">
-          <div className="p-5 border-b border-[var(--surface-border)] flex items-center justify-between">
+      {/* --- TAB: ORDERS --- */}
+      {activeTab === "orders" && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-[var(--foreground-muted)] absolute left-3 top-3" />
+                <input
+                  type="text"
+                  placeholder="Search by order ID, name, phone..."
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  className="pl-8 pr-3 py-2 text-xs rounded-xl border border-[var(--surface-border)] bg-[var(--surface)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] w-64"
+                />
+              </div>
+
+              <select
+                value={orderStatusFilter}
+                onChange={(e) => setOrderStatusFilter(e.target.value)}
+                className="py-2 px-3 text-xs rounded-xl border border-[var(--surface-border)] bg-[var(--surface)] text-[var(--foreground)]"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="CONFIRMED">CONFIRMED</option>
+                <option value="PAID">PAID</option>
+                <option value="PREPARING">PREPARING</option>
+                <option value="READY">READY</option>
+                <option value="OUT_FOR_DELIVERY">OUT_FOR_DELIVERY</option>
+                <option value="DELIVERED">DELIVERED</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </div>
+
+            <div className="text-xs text-[var(--foreground-muted)] font-semibold">
+              Showing {filteredOrders.length} of {orders.length} orders
+            </div>
+          </div>
+
+          {filteredOrders.length === 0 ? (
+            <div className="text-center py-16 bg-[var(--surface)] rounded-2xl border border-[var(--surface-border)]">
+              <Package className="w-10 h-10 text-[var(--foreground-muted)] mx-auto mb-2 opacity-50" />
+              <p className="text-sm font-semibold text-[var(--foreground)]">No orders matched</p>
+              <p className="text-xs text-[var(--foreground-muted)] mt-1">
+                Try changing your filter or search query.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredOrders.map((o) => (
+                <div
+                  key={o.id}
+                  className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--surface-border)] shadow-xs space-y-4"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[var(--surface-border)]">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-sm font-bold text-[var(--primary)]">
+                        {o.id}
+                      </span>
+                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-[var(--surface-alt)] border border-[var(--surface-border)] text-[var(--foreground)]">
+                        {o.status}
+                      </span>
+                      <span className="text-xs text-[var(--foreground-muted)] flex items-center gap-1">
+                        <Truck className="w-3 h-3" />
+                        {o.deliveryType === "PICKUP" ? "Store Pickup" : "Local Delivery"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-[var(--foreground-muted)]">Status:</span>
+                      <select
+                        value={o.status}
+                        onChange={(e) =>
+                          handleUpdateOrderStatus(o.id, e.target.value as OrderStatusType)
+                        }
+                        className="py-1 px-2.5 text-xs font-semibold rounded-lg border border-[var(--surface-border)] bg-[var(--surface-alt)] text-[var(--foreground)]"
+                      >
+                        <option value="CONFIRMED">CONFIRMED</option>
+                        <option value="PAID">PAID</option>
+                        <option value="PREPARING">PREPARING</option>
+                        <option value="READY">READY</option>
+                        <option value="OUT_FOR_DELIVERY">OUT_FOR_DELIVERY</option>
+                        <option value="DELIVERED">DELIVERED</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Customer, Date & Items Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div className="space-y-1">
+                      <span className="font-semibold text-[var(--foreground-muted)] uppercase tracking-wider block text-[10px]">
+                        Customer Details
+                      </span>
+                      <p className="font-bold text-sm text-[var(--foreground)]">{o.customerName}</p>
+                      <p className="text-[var(--foreground-muted)]">📞 {o.customerPhone}</p>
+                      {o.deliveryAddress && (
+                        <p className="text-[var(--foreground-muted)] line-clamp-2">
+                          📍 {o.deliveryAddress}
+                        </p>
+                      )}
+                      {o.specialInstructions && (
+                        <p className="text-amber-700 bg-amber-50 p-1.5 rounded-md mt-1 border border-amber-200">
+                          📝 {o.specialInstructions}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="font-semibold text-[var(--foreground-muted)] uppercase tracking-wider block text-[10px]">
+                        Fulfillment Schedule
+                      </span>
+                      <p className="font-semibold text-[var(--foreground)]">
+                        📅 {new Date(o.deliveryDate).toLocaleDateString("en-IN", {
+                          weekday: "short",
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                      <p className="text-[var(--foreground-muted)]">
+                        ⏰ Slot: {o.deliveryTimeSlot || "Not specified"}
+                      </p>
+                      <div className="pt-2">
+                        <label className="block text-[10px] font-semibold text-[var(--foreground-muted)] mb-1">
+                          Assign Kitchen Staff:
+                        </label>
+                        <select
+                          value={o.assignedStaffId || ""}
+                          onChange={(e) => handleReassignStaff(o.id, e.target.value)}
+                          className="w-full py-1.5 px-2 text-xs rounded-lg border border-[var(--surface-border)] bg-[var(--surface-alt)] font-semibold"
+                        >
+                          <option value="">Unassigned Queue</option>
+                          {staff.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name} ({s.role} - {s.dutyStatus === "ON_DUTY" ? "🟢 On Duty" : "⚪ Off Duty"})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 bg-[var(--surface-alt)] p-3 rounded-xl border border-[var(--surface-border)]">
+                      <span className="font-semibold text-[var(--foreground-muted)] uppercase tracking-wider block text-[10px]">
+                        Order Items ({o.items?.length || 0})
+                      </span>
+                      <ul className="space-y-1.5 max-h-32 overflow-y-auto">
+                        {o.items?.map((item, idx) => (
+                          <li key={idx} className="flex justify-between items-start">
+                            <div>
+                              <p className="font-semibold text-[var(--foreground)]">
+                                {item.productName} ({item.quantity}x)
+                              </p>
+                              <p className="text-[10px] text-[var(--foreground-muted)]">
+                                {item.size} &bull; {item.flavour}
+                                {item.cakeMessage ? ` &bull; "${item.cakeMessage}"` : ""}
+                              </p>
+                            </div>
+                            <span className="font-bold text-[var(--foreground)]">
+                              ₹{item.totalPrice}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="border-t border-[var(--surface-border)] pt-2 flex justify-between font-bold text-sm text-[var(--primary)]">
+                        <span>Total Paid:</span>
+                        <span>₹{o.totalAmount}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* --- TAB: PRODUCTS --- */}
+      {activeTab === "products" && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[var(--foreground-muted)] font-semibold">Filter:</span>
+              <select
+                value={productCategoryFilter}
+                onChange={(e) => setProductCategoryFilter(e.target.value)}
+                className="py-1.5 px-3 text-xs rounded-xl border border-[var(--surface-border)] bg-[var(--surface)] text-[var(--foreground)]"
+              >
+                <option value="all">All Categories</option>
+                <option value="cakes">Cakes</option>
+                <option value="desserts">Desserts</option>
+                <option value="bakery">Bakery</option>
+                <option value="celebrations">Celebrations</option>
+              </select>
+            </div>
+
+            <button
+              onClick={() => {
+                setEditingProduct({
+                  name: "",
+                  category: "cakes",
+                  startingPrice: 650,
+                  eggless: true,
+                  featured: false,
+                  availableToday: true,
+                  flavours: ["Belgian Chocolate", "Vanilla Bean"],
+                  sizes: ["500 g", "1 kg"],
+                });
+                setProductModalOpen(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] text-xs font-semibold shadow-xs hover:bg-[var(--primary-hover)] transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add New Product</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProducts.map((p) => (
+              <div
+                key={p.id}
+                className="bg-[var(--surface)] rounded-2xl border border-[var(--surface-border)] p-4 space-y-3 shadow-xs"
+              >
+                <div className="relative aspect-video rounded-xl overflow-hidden bg-[var(--surface-alt)] border border-[var(--surface-border)]">
+                  {p.images?.[0] ? (
+                    <Image src={p.images[0]} alt={p.name} fill className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-[var(--foreground-muted)]">
+                      No Image
+                    </div>
+                  )}
+                  {p.eggless && (
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200">
+                      100% Eggless
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--primary)]">
+                      {p.category}
+                    </span>
+                    <span className="font-bold text-sm text-[var(--foreground)]">
+                      {p.startingPrice ? `₹${p.startingPrice}` : "Enquiry"}
+                    </span>
+                  </div>
+                  <h3 className="font-serif text-base font-bold text-[var(--foreground)] line-clamp-1 mt-0.5">
+                    {p.name}
+                  </h3>
+                  <p className="text-xs text-[var(--foreground-muted)] line-clamp-2 mt-1">
+                    {p.description}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--surface-border)]">
+                  <button
+                    onClick={() => {
+                      setEditingProduct(p);
+                      setProductModalOpen(true);
+                    }}
+                    className="p-2 rounded-lg text-xs font-semibold text-[var(--foreground-muted)] hover:bg-[var(--surface-alt)] hover:text-[var(--foreground)] transition-colors"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteProduct(p.id)}
+                    className="p-2 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* --- TAB: CUSTOM CAKES --- */}
+      {activeTab === "custom-cakes" && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
             <h2 className="font-serif text-lg font-bold text-[var(--foreground)]">
-              Custom Cake Requests Pipeline
+              Custom Cake Design Enquiries ({customRequests.length})
             </h2>
             <span className="text-xs text-[var(--foreground-muted)]">
-              {customRequests.length} total requests
+              Direct enquiries with customer reference images
             </span>
           </div>
 
-          <div className="overflow-x-auto">
+          {customRequests.length === 0 ? (
+            <div className="text-center py-16 bg-[var(--surface)] rounded-2xl border border-[var(--surface-border)]">
+              <Calendar className="w-10 h-10 text-[var(--foreground-muted)] mx-auto mb-2 opacity-50" />
+              <p className="text-sm font-semibold text-[var(--foreground)]">No custom cake requests</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {customRequests.map((cr) => (
+                <div
+                  key={cr.id}
+                  className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--surface-border)] shadow-xs space-y-4"
+                >
+                  <div className="flex items-center justify-between pb-3 border-b border-[var(--surface-border)]">
+                    <div>
+                      <span className="font-mono text-xs font-bold text-[var(--primary)]">
+                        {cr.id}
+                      </span>
+                      <h3 className="font-serif text-base font-bold text-[var(--foreground)]">
+                        {cr.customerName} &bull; {cr.occasion}
+                      </h3>
+                    </div>
+                    <select
+                      value={cr.status}
+                      onChange={(e) =>
+                        handleUpdateCustomStatus(cr.id, e.target.value as CustomRequestStatus)
+                      }
+                      className="py-1 px-2.5 text-xs font-semibold rounded-lg border border-[var(--surface-border)] bg-[var(--surface-alt)]"
+                    >
+                      <option value="New">New</option>
+                      <option value="Reviewing">Reviewing</option>
+                      <option value="Quoted">Quoted</option>
+                      <option value="Confirmed">Confirmed</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-[var(--foreground-muted)]">Phone:</span>
+                      <p className="font-bold">{cr.phone}</p>
+                    </div>
+                    <div>
+                      <span className="text-[var(--foreground-muted)]">Flavour & Size:</span>
+                      <p className="font-bold">
+                        {cr.flavour} &bull; {cr.size}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[var(--foreground-muted)]">Delivery Date:</span>
+                      <p className="font-bold">{cr.deliveryDate || "Not chosen"}</p>
+                    </div>
+                    <div>
+                      <span className="text-[var(--foreground-muted)]">Eggless:</span>
+                      <p className="font-bold">{cr.eggless ? "Yes (100% Eggless)" : "Regular"}</p>
+                    </div>
+                  </div>
+
+                  {cr.message && (
+                    <div className="text-xs bg-[var(--surface-alt)] p-2.5 rounded-xl border border-[var(--surface-border)]">
+                      <span className="text-[var(--foreground-muted)] block text-[10px]">
+                        Message on Cake:
+                      </span>
+                      <span className="font-serif italic text-[var(--foreground)]">
+                        &ldquo;{cr.message}&rdquo;
+                      </span>
+                    </div>
+                  )}
+
+                  {cr.referenceImage && (
+                    <div className="relative aspect-video rounded-xl overflow-hidden border border-[var(--surface-border)]">
+                      <Image
+                        src={cr.referenceImage}
+                        alt="Customer Reference"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* --- TAB: CUSTOMERS --- */}
+      {activeTab === "customers" && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-serif text-lg font-bold text-[var(--foreground)]">
+                Customer Directory ({customersList.length})
+              </h2>
+              <p className="text-xs text-[var(--foreground-muted)]">
+                Aggregated patron records and repeat order history
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--surface-border)] overflow-hidden">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[var(--surface-alt)] text-[var(--foreground-muted)] uppercase tracking-wider text-[10px] font-bold border-b border-[var(--surface-border)]">
+              <thead className="bg-[var(--surface-alt)] text-[var(--foreground-muted)] border-b border-[var(--surface-border)]">
                 <tr>
-                  <th className="py-3 px-4">Request ID</th>
-                  <th className="py-3 px-4">Customer</th>
-                  <th className="py-3 px-4">Occasion & Cake</th>
-                  <th className="py-3 px-4">Date / Mode</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Reference</th>
+                  <th className="p-3.5 font-semibold">Customer</th>
+                  <th className="p-3.5 font-semibold">Mobile</th>
+                  <th className="p-3.5 font-semibold">Orders Placed</th>
+                  <th className="p-3.5 font-semibold">Total Lifetime Spend</th>
+                  <th className="p-3.5 font-semibold">Last Ordered</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--surface-border)]">
-                {customRequests.map((req) => (
-                  <tr key={req.id} className="hover:bg-[var(--surface-alt)]/50 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-[var(--foreground)]">{req.id}</td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-semibold text-[var(--foreground)]">{req.customerName}</div>
-                      <div className="text-[11px] text-[var(--foreground-muted)]">{req.phone}</div>
+                {customersList.map((c, i) => (
+                  <tr key={i} className="hover:bg-[var(--surface-alt)] transition-colors">
+                    <td className="p-3.5 font-bold text-[var(--foreground)]">{c.name}</td>
+                    <td className="p-3.5 font-mono text-[var(--foreground-muted)]">{c.phone}</td>
+                    <td className="p-3.5 font-semibold">{c.totalOrders} order(s)</td>
+                    <td className="p-3.5 font-bold text-[var(--primary)]">
+                      ₹{c.totalSpent.toLocaleString("en-IN")}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-semibold text-[var(--foreground)]">{req.occasion}</div>
-                      <div className="text-[11px] text-[var(--foreground-muted)]">
-                        {req.flavour} &bull; {req.size} &bull; {req.eggless ? "Eggless" : "Regular"}
-                      </div>
-                      {req.message && (
-                        <div className="text-[10px] italic text-[var(--primary)] mt-0.5">
-                          &ldquo;{req.message}&rdquo;
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div>{req.deliveryDate || "Pending"} {req.deliveryTime ? `@ ${req.deliveryTime}` : ""}</div>
-                      <div className="text-[10px] text-[var(--foreground-muted)]">{req.deliveryType}</div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <select
-                        value={req.status}
-                        onChange={(e) =>
-                          handleUpdateStatus(req.id, e.target.value as CustomRequestStatus)
-                        }
-                        className="py-1 px-2 rounded-lg border border-[var(--surface-border)] bg-[var(--surface)] text-xs font-semibold"
-                      >
-                        <option value="New">New</option>
-                        <option value="Reviewing">Reviewing</option>
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Payment Pending">Payment Pending</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      {req.referenceImage ? (
-                        <a
-                          href={req.referenceImage}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[var(--primary)] underline font-medium"
-                        >
-                          View Photo
-                        </a>
-                      ) : (
-                        <span className="text-[var(--foreground-subtle)]">&mdash;</span>
-                      )}
+                    <td className="p-3.5 text-[var(--foreground-muted)]">
+                      {new Date(c.lastOrderDate).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </td>
                   </tr>
                 ))}
@@ -576,146 +1306,61 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* ENQUIRIES TAB */}
-      {activeTab === "enquiries" && (
-        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--surface-border)] overflow-hidden shadow-xs">
-          <div className="p-5 border-b border-[var(--surface-border)]">
-            <h2 className="font-serif text-lg font-bold text-[var(--foreground)]">
-              Product Catalogue Enquiries
-            </h2>
-          </div>
-
-          <div className="divide-y divide-[var(--surface-border)]">
-            {enquiries.map((enq) => (
-              <div key={enq.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <span className="text-[10px] font-bold text-[var(--foreground-muted)] uppercase">
-                    {enq.id} &bull; {enq.createdAt ? new Date(enq.createdAt).toLocaleDateString() : ""}
-                  </span>
-                  <h3 className="font-bold text-sm text-[var(--foreground)] mt-0.5">
-                    {enq.product} {enq.size ? `(${enq.size})` : ""} &bull; Qty: {enq.quantity}
-                  </h3>
-                  <div className="text-xs text-[var(--foreground-muted)] mt-1">
-                    Customer: <span className="font-semibold text-[var(--foreground)]">{enq.customer}</span> ({enq.phone}) &bull; Date: {enq.date || "Immediate"}
-                  </div>
-                  {enq.message && (
-                    <p className="text-xs text-[var(--foreground-muted)] italic mt-1 bg-[var(--surface-alt)] p-2 rounded-lg">
-                      {enq.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="shrink-0 flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                    {enq.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* PRODUCTS TAB */}
-      {activeTab === "products" && (
+      {/* --- TAB: STAFF --- */}
+      {activeTab === "staff" && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-serif text-xl font-bold text-[var(--foreground)]">
-              Product Catalogue Management
-            </h2>
+            <div>
+              <h2 className="font-serif text-lg font-bold text-[var(--foreground)]">
+                Kitchen & Dispatch Staff ({staff.length})
+              </h2>
+              <p className="text-xs text-[var(--foreground-muted)]">
+                Manage shifts, roles, and automated workload assignment
+              </p>
+            </div>
             <button
-              onClick={() => {
-                setEditingProduct({
-                  name: "",
-                  category: "cakes",
-                  subcategory: "Chocolate",
-                  description: "",
-                  flavours: ["Belgian Dark Chocolate"],
-                  sizes: ["500 g", "1 kg"],
-                  startingPrice: null,
-                  eggless: true,
-                  customizable: true,
-                  availableToday: true,
-                  advanceOrderRequired: false,
-                  featured: false,
-                  active: true,
-                  images: ["https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=800&auto=format&fit=crop"],
-                });
-                setProductModalOpen(true);
-              }}
-              className="tap-target px-4 py-2.5 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] text-xs font-semibold hover:bg-[var(--primary-hover)] flex items-center gap-1.5 shadow-xs"
+              onClick={() => setStaffModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] text-xs font-semibold shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Add New Product</span>
+              <span>Add Staff Member</span>
             </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((prod) => (
+            {staff.map((s) => (
               <div
-                key={prod.id}
-                className="bg-[var(--surface)] rounded-2xl border border-[var(--surface-border)] overflow-hidden p-4 flex flex-col justify-between shadow-xs space-y-3"
+                key={s.id}
+                className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--surface-border)] shadow-xs space-y-4"
               >
-                <div className="flex gap-3">
-                  <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-[var(--surface-alt)] shrink-0">
-                    <Image
-                      src={prod.images[0] || "/placeholder.jpg"}
-                      alt={prod.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-[var(--foreground-muted)]">
-                      {prod.category} &bull; {prod.subcategory}
-                    </span>
-                    <h3 className="font-serif text-sm font-bold text-[var(--foreground)] line-clamp-1">
-                      {prod.name}
-                    </h3>
-                    <div className="text-xs text-[var(--primary)] font-semibold mt-0.5">
-                      {prod.startingPrice ? `₹${prod.startingPrice}` : "Price on enquiry"}
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[var(--surface-alt)] text-[var(--foreground-muted)]">
+                    {s.role}
+                  </span>
+                  <button
+                    onClick={() => handleToggleDuty(s)}
+                    className={`text-xs font-bold px-3 py-1 rounded-xl transition-colors ${
+                      s.dutyStatus === "ON_DUTY"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-gray-100 text-gray-500 border border-gray-200"
+                    }`}
+                  >
+                    {s.dutyStatus === "ON_DUTY" ? "🟢 ON DUTY" : "⚪ OFF DUTY"}
+                  </button>
                 </div>
 
-                {/* Status Toggles & Badges */}
-                <div className="flex flex-wrap gap-1.5 text-[10px]">
-                  {prod.eggless && (
-                    <span className="px-1.5 py-0.5 rounded bg-[var(--badge-eggless-bg)] text-[var(--badge-eggless-text)]">
-                      Eggless
-                    </span>
-                  )}
-                  {prod.availableToday && (
-                    <span className="px-1.5 py-0.5 rounded bg-[var(--badge-gold-bg)] text-[var(--badge-gold-text)]">
-                      Available Today
-                    </span>
-                  )}
-                  {prod.featured && (
-                    <span className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-700">
-                      Featured
-                    </span>
-                  )}
+                <div>
+                  <h3 className="font-serif text-base font-bold text-[var(--foreground)]">
+                    {s.name}
+                  </h3>
+                  <p className="text-xs text-[var(--foreground-muted)]">📞 {s.phone}</p>
                 </div>
 
-                <div className="pt-2 border-t border-[var(--surface-border)] flex items-center justify-between">
-                  <button
-                    onClick={() => {
-                      setEditingProduct(prod);
-                      setProductModalOpen(true);
-                    }}
-                    className="text-xs font-semibold text-[var(--primary)] hover:underline flex items-center gap-1"
-                  >
-                    <Edit2 className="w-3 h-3" />
-                    <span>Edit</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleDeleteProduct(prod.id)}
-                    className="text-xs font-semibold text-red-600 hover:underline flex items-center gap-1"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    <span>Delete</span>
-                  </button>
+                <div className="pt-3 border-t border-[var(--surface-border)] flex items-center justify-between text-xs">
+                  <span className="text-[var(--foreground-muted)]">Active Orders Assigned:</span>
+                  <span className="font-bold text-[var(--primary)]">
+                    {s.activeOrderCount || 0}
+                  </span>
                 </div>
               </div>
             ))}
@@ -723,16 +1368,231 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* GALLERY TAB */}
+      {/* --- TAB: SETTINGS --- */}
+      {activeTab === "settings" && settings && (
+        <div className="max-w-2xl bg-[var(--surface)] p-6 sm:p-8 rounded-3xl border border-[var(--surface-border)] shadow-xs space-y-6">
+          <div>
+            <h2 className="font-serif text-xl font-bold text-[var(--foreground)]">
+              Store Configuration
+            </h2>
+            <p className="text-xs text-[var(--foreground-muted)]">
+              Configure Rajahmundry bakery operating rules, fees, and order acceptance
+            </p>
+          </div>
+
+          <form onSubmit={handleSaveSettings} className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-semibold mb-1">Business Name</label>
+                <input
+                  type="text"
+                  value={settings.businessName}
+                  onChange={(e) => setSettings({ ...settings, businessName: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)] font-semibold"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1">Tagline</label>
+                <input
+                  type="text"
+                  value={settings.tagline}
+                  onChange={(e) => setSettings({ ...settings, tagline: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-semibold mb-1">Store Contact Phone</label>
+                <input
+                  type="text"
+                  value={settings.phone || ""}
+                  onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1">Official WhatsApp Number</label>
+                <input
+                  type="text"
+                  value={settings.whatsapp || ""}
+                  onChange={(e) => setSettings({ ...settings, whatsapp: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block font-semibold mb-1">Delivery Charge (₹)</label>
+                <input
+                  type="number"
+                  value={settings.deliveryCharge}
+                  onChange={(e) =>
+                    setSettings({ ...settings, deliveryCharge: Number(e.target.value) })
+                  }
+                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1">Free Delivery Above (₹)</label>
+                <input
+                  type="number"
+                  value={settings.freeDeliveryThreshold || 1500}
+                  onChange={(e) =>
+                    setSettings({ ...settings, freeDeliveryThreshold: Number(e.target.value) })
+                  }
+                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1">Min Prep Time (Hours)</label>
+                <input
+                  type="number"
+                  value={settings.minPreparationHours}
+                  onChange={(e) =>
+                    setSettings({ ...settings, minPreparationHours: Number(e.target.value) })
+                  }
+                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-3 border-t border-[var(--surface-border)]">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.acceptingOrders}
+                  onChange={(e) =>
+                    setSettings({ ...settings, acceptingOrders: e.target.checked })
+                  }
+                  className="rounded text-[var(--primary)] focus:ring-[var(--primary)]"
+                />
+                <span className="font-semibold text-[var(--foreground)]">
+                  Accept Customer Orders Online (Store Live)
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.customOrdersEnabled}
+                  onChange={(e) =>
+                    setSettings({ ...settings, customOrdersEnabled: e.target.checked })
+                  }
+                  className="rounded text-[var(--primary)] focus:ring-[var(--primary)]"
+                />
+                <span className="font-semibold text-[var(--foreground)]">
+                  Enable Custom Designer Cake Enquiries
+                </span>
+              </label>
+            </div>
+
+            {settingsSuccess && (
+              <p className="text-emerald-700 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">
+                ✓ Store settings successfully updated!
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={savingSettings}
+              className="py-3 px-6 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] font-bold shadow-xs hover:bg-[var(--primary-hover)] transition-colors"
+            >
+              {savingSettings ? "Saving Settings…" : "Save Store Configuration"}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* --- TAB: AUTOMATION LOGS --- */}
+      {activeTab === "automation-logs" && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-serif text-lg font-bold text-[var(--foreground)]">
+                Automation Event Stream ({automationLogs.length})
+              </h2>
+              <p className="text-xs text-[var(--foreground-muted)]">
+                Audit trail for WhatsApp notices, Google Sheets sync, and order dispatch
+              </p>
+            </div>
+          </div>
+
+          {automationLogs.length === 0 ? (
+            <div className="text-center py-16 bg-[var(--surface)] rounded-2xl border border-[var(--surface-border)]">
+              <Activity className="w-10 h-10 text-[var(--foreground-muted)] mx-auto mb-2 opacity-50" />
+              <p className="text-sm font-semibold text-[var(--foreground)]">No automation events yet</p>
+              <p className="text-xs text-[var(--foreground-muted)] mt-1">
+                Events will log here automatically when orders are placed or updated.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--surface-border)] overflow-hidden">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[var(--surface-alt)] text-[var(--foreground-muted)] border-b border-[var(--surface-border)]">
+                  <tr>
+                    <th className="p-3 font-semibold">Timestamp</th>
+                    <th className="p-3 font-semibold">Event</th>
+                    <th className="p-3 font-semibold">Channel</th>
+                    <th className="p-3 font-semibold">Recipient</th>
+                    <th className="p-3 font-semibold">Status</th>
+                    <th className="p-3 font-semibold">Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--surface-border)]">
+                  {automationLogs.map((log) => (
+                    <tr key={log.id} className="hover:bg-[var(--surface-alt)] transition-colors">
+                      <td className="p-3 font-mono text-[11px] text-[var(--foreground-muted)]">
+                        {new Date(log.timestamp).toLocaleTimeString("en-IN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })}
+                      </td>
+                      <td className="p-3 font-bold text-[var(--foreground)]">{log.event}</td>
+                      <td className="p-3 font-semibold">
+                        <span className="px-2 py-0.5 rounded-md bg-[var(--surface-alt)] border border-[var(--surface-border)] text-[10px]">
+                          {log.channel}
+                        </span>
+                      </td>
+                      <td className="p-3 text-[var(--foreground-muted)]">{log.recipient}</td>
+                      <td className="p-3">
+                        <span
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                            log.status === "SENT"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : log.status === "READY_TO_CONNECT"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : "bg-red-50 text-red-600 border border-red-200"
+                          }`}
+                        >
+                          {log.status}
+                        </span>
+                      </td>
+                      <td className="p-3 text-[11px] text-[var(--foreground-muted)] max-w-xs truncate">
+                        {log.details}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* --- TAB: GALLERY --- */}
       {activeTab === "gallery" && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-serif text-xl font-bold text-[var(--foreground)]">
-              Gallery Management
+            <h2 className="font-serif text-lg font-bold text-[var(--foreground)]">
+              Bakery Photo Gallery ({gallery.length})
             </h2>
             <button
               onClick={() => setGalleryModalOpen(true)}
-              className="tap-target px-4 py-2.5 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] text-xs font-semibold hover:bg-[var(--primary-hover)] flex items-center gap-1.5 shadow-xs"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] text-xs font-semibold shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add to Gallery</span>
@@ -740,30 +1600,21 @@ export default function AdminDashboard() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {gallery.map((item) => (
+            {gallery.map((g) => (
               <div
-                key={item.id}
-                className="bg-[var(--surface)] rounded-2xl border border-[var(--surface-border)] overflow-hidden shadow-xs flex flex-col justify-between"
+                key={g.id}
+                className="group relative aspect-square rounded-2xl overflow-hidden border border-[var(--surface-border)] bg-[var(--surface-alt)]"
               >
-                <div className="relative aspect-square w-full bg-[var(--surface-alt)]">
-                  <Image src={item.image} alt={item.title} fill className="object-cover" />
-                  <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded bg-black/60 text-white">
-                    {item.category}
-                  </span>
-                </div>
-                <div className="p-3">
-                  <h4 className="font-serif text-xs font-bold text-[var(--foreground)] line-clamp-1">
-                    {item.title}
-                  </h4>
-                  <div className="mt-2 pt-2 border-t border-[var(--surface-border)] flex justify-end">
-                    <button
-                      onClick={() => handleDeleteGallery(item.id)}
-                      className="text-[11px] text-red-600 hover:underline flex items-center gap-1 font-semibold"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      <span>Remove</span>
-                    </button>
-                  </div>
+                <Image src={g.image} alt={g.title} fill className="object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
+                  <p className="text-white text-xs font-bold line-clamp-1">{g.title}</p>
+                  <p className="text-white/80 text-[10px]">{g.category}</p>
+                  <button
+                    onClick={() => handleDeleteGallery(g.id)}
+                    className="mt-2 self-end p-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             ))}
@@ -771,36 +1622,35 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Product Edit / Add Modal */}
+      {/* --- MODAL: PRODUCT ADD / EDIT --- */}
       {productModalOpen && editingProduct && (
         <div
           role="dialog"
           aria-modal="true"
           className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
         >
-          <div className="w-full max-w-xl bg-[var(--surface)] rounded-3xl p-6 sm:p-8 border border-[var(--surface-border)] shadow-2xl space-y-4 my-8">
+          <div className="w-full max-w-lg bg-[var(--surface)] rounded-3xl p-6 sm:p-8 border border-[var(--surface-border)] shadow-2xl space-y-4 my-8">
             <h3 className="font-serif text-xl font-bold text-[var(--foreground)]">
-              {editingProduct.id ? "Edit Product" : "Create New Product"}
+              {editingProduct.id ? "Edit Cake Product" : "Add New Cake Product"}
             </h3>
 
             <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold mb-1">Product Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingProduct.name || ""}
-                    onChange={(e) =>
-                      setEditingProduct({ ...editingProduct, name: e.target.value })
-                    }
-                    className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
-                  />
-                </div>
+              <div>
+                <label className="block font-semibold mb-1">Product Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingProduct.name || ""}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block font-semibold mb-1">Category *</label>
                   <select
-                    value={editingProduct.category || "cakes"}
+                    value={editingProduct.category || "classic"}
                     onChange={(e) =>
                       setEditingProduct({
                         ...editingProduct,
@@ -815,33 +1665,19 @@ export default function AdminDashboard() {
                     <option value="celebrations">Celebrations</option>
                   </select>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold mb-1">Subcategory / Style</label>
-                  <input
-                    type="text"
-                    value={editingProduct.subcategory || ""}
-                    onChange={(e) =>
-                      setEditingProduct({ ...editingProduct, subcategory: e.target.value })
-                    }
-                    placeholder="e.g. Chocolate, Bento, Bread"
-                    className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold mb-1">Starting Price (₹) or leave empty</label>
+                  <label className="block font-semibold mb-1">Starting Price (₹) *</label>
                   <input
                     type="number"
-                    value={editingProduct.startingPrice ?? ""}
+                    required
+                    value={editingProduct.startingPrice || ""}
                     onChange={(e) =>
                       setEditingProduct({
                         ...editingProduct,
-                        startingPrice: e.target.value ? Number(e.target.value) : null,
+                        startingPrice: Number(e.target.value),
                       })
                     }
-                    placeholder="Empty = Price on enquiry"
                     className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
                   />
                 </div>
@@ -866,7 +1702,7 @@ export default function AdminDashboard() {
                   value={
                     Array.isArray(editingProduct.flavours)
                       ? editingProduct.flavours.join(", ")
-                      : editingProduct.flavours || ""
+                      : ""
                   }
                   onChange={(e) =>
                     setEditingProduct({
@@ -874,7 +1710,6 @@ export default function AdminDashboard() {
                       flavours: e.target.value.split(",").map((s) => s.trim()),
                     })
                   }
-                  placeholder="e.g. Belgian Truffle, Dark Chocolate"
                   className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
                 />
               </div>
@@ -886,7 +1721,7 @@ export default function AdminDashboard() {
                   value={
                     Array.isArray(editingProduct.sizes)
                       ? editingProduct.sizes.join(", ")
-                      : editingProduct.sizes || ""
+                      : ""
                   }
                   onChange={(e) =>
                     setEditingProduct({
@@ -894,46 +1729,22 @@ export default function AdminDashboard() {
                       sizes: e.target.value.split(",").map((s) => s.trim()),
                     })
                   }
-                  placeholder="e.g. 500 g, 1 kg, 2 kg"
                   className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
                 />
               </div>
 
-              <div>
-                <label className="block font-semibold mb-1">Image URL</label>
-                <input
-                  type="text"
-                  value={editingProduct.images?.[0] || ""}
-                  onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, images: [e.target.value] })
-                  }
-                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
-                />
-              </div>
-
-              {/* Toggles */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
-                <label className="flex items-center gap-1.5">
+              <div className="flex flex-wrap gap-4 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={editingProduct.eggless ?? false}
+                    checked={editingProduct.eggless ?? true}
                     onChange={(e) =>
                       setEditingProduct({ ...editingProduct, eggless: e.target.checked })
                     }
                   />
-                  <span>Eggless</span>
+                  <span>100% Eggless Option</span>
                 </label>
-                <label className="flex items-center gap-1.5">
-                  <input
-                    type="checkbox"
-                    checked={editingProduct.availableToday ?? false}
-                    onChange={(e) =>
-                      setEditingProduct({ ...editingProduct, availableToday: e.target.checked })
-                    }
-                  />
-                  <span>Available Today</span>
-                </label>
-                <label className="flex items-center gap-1.5">
+                <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={editingProduct.featured ?? false}
@@ -941,17 +1752,17 @@ export default function AdminDashboard() {
                       setEditingProduct({ ...editingProduct, featured: e.target.checked })
                     }
                   />
-                  <span>Featured</span>
+                  <span>Featured Product</span>
                 </label>
-                <label className="flex items-center gap-1.5">
+                <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={editingProduct.customizable ?? true}
+                    checked={editingProduct.availableToday ?? true}
                     onChange={(e) =>
-                      setEditingProduct({ ...editingProduct, customizable: e.target.checked })
+                      setEditingProduct({ ...editingProduct, availableToday: e.target.checked })
                     }
                   />
-                  <span>Customizable</span>
+                  <span>Available Today</span>
                 </label>
               </div>
 
@@ -965,7 +1776,7 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] font-semibold"
+                  className="px-6 py-2 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] font-semibold shadow-xs"
                 >
                   Save Product
                 </button>
@@ -975,7 +1786,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Gallery Add Modal */}
+      {/* --- MODAL: GALLERY ADD --- */}
       {galleryModalOpen && (
         <div
           role="dialog"
@@ -993,7 +1804,7 @@ export default function AdminDashboard() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Two-Tier Pastel Floral Cake"
+                  placeholder="e.g. Elegant Floral Wedding Cake"
                   value={newGalleryItem.title}
                   onChange={(e) =>
                     setNewGalleryItem({ ...newGalleryItem, title: e.target.value })
@@ -1039,19 +1850,6 @@ export default function AdminDashboard() {
                 </select>
               </div>
 
-              <div>
-                <label className="block font-semibold mb-1">Flavour (Optional)</label>
-                <input
-                  type="text"
-                  value={newGalleryItem.flavour}
-                  onChange={(e) =>
-                    setNewGalleryItem({ ...newGalleryItem, flavour: e.target.value })
-                  }
-                  placeholder="e.g. Belgian Dark Truffle"
-                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
-                />
-              </div>
-
               <div className="pt-3 flex justify-end gap-2 border-t border-[var(--surface-border)]">
                 <button
                   type="button"
@@ -1065,6 +1863,82 @@ export default function AdminDashboard() {
                   className="px-6 py-2 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] font-semibold"
                 >
                   Add to Gallery
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL: STAFF ADD --- */}
+      {staffModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="w-full max-w-md bg-[var(--surface)] rounded-3xl p-6 sm:p-8 border border-[var(--surface-border)] shadow-2xl space-y-4">
+            <h3 className="font-serif text-xl font-bold text-[var(--foreground)]">
+              Add Kitchen / Dispatch Staff
+            </h3>
+
+            <form onSubmit={handleAddStaff} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Master Baker Ramesh"
+                  value={newStaff.name || ""}
+                  onChange={(e) => setNewStaff({ ...newStaff, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1">Mobile Number *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="9848011111"
+                  value={newStaff.phone || ""}
+                  onChange={(e) => setNewStaff({ ...newStaff, phone: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1">Role *</label>
+                <select
+                  value={newStaff.role || "BAKER"}
+                  onChange={(e) =>
+                    setNewStaff({
+                      ...newStaff,
+                      role: e.target.value as StaffMember["role"],
+                    })
+                  }
+                  className="w-full p-2.5 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)]"
+                >
+                  <option value="BAKER">BAKER</option>
+                  <option value="DECORATOR">DECORATOR</option>
+                  <option value="PACKER">PACKER</option>
+                  <option value="DISPATCHER">DISPATCHER</option>
+                </select>
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2 border-t border-[var(--surface-border)]">
+                <button
+                  type="button"
+                  onClick={() => setStaffModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-[var(--surface-border)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] font-semibold"
+                >
+                  Add Staff Member
                 </button>
               </div>
             </form>

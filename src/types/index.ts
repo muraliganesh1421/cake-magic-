@@ -117,6 +117,16 @@ export type DeliveryMethod = "DELIVERY" | "PICKUP";
 export type StaffRole = "BAKER" | "DECORATOR" | "PACKER" | "DISPATCHER";
 export type DutyStatusType = "ON_DUTY" | "OFF_DUTY";
 
+export interface StaffMember {
+  id: string;
+  name: string;
+  phone: string;
+  role: StaffRole;
+  dutyStatus: DutyStatusType;
+  activeOrderCount: number;
+  active: boolean;
+}
+
 export interface CartItem {
   id: string;
   productId: string;

@@ -65,7 +65,7 @@ export default function OrderStatusPage() {
           Check Your Cake Request Status
         </h1>
         <p className="text-xs sm:text-sm text-[var(--foreground-muted)] mt-2">
-          Enter your Request ID (e.g. REQ-2026-001) or 10-digit mobile number to view progress.
+          Enter your Request ID (e.g. CR-20260929-001) or 10-digit mobile number to view progress.
         </p>
       </div>
 
@@ -77,7 +77,7 @@ export default function OrderStatusPage() {
               type="text"
               value={lookupValue}
               onChange={(e) => setLookupValue(e.target.value)}
-              placeholder="e.g. REQ-2026-001 or 98480..."
+              placeholder="e.g. CR-20260929-001 or 98480..."
               required
               className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm rounded-xl border border-[var(--surface-border)] bg-[var(--surface-alt)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
             />

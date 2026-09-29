@@ -41,7 +41,7 @@ export async function PATCH(request: Request) {
     if (!body.id || !body.status) {
       return NextResponse.json({ error: "ID and status are required" }, { status: 400 });
     }
-    const updated = store.updateEnquiryStatus(body.id, body.status);
+    const updated = store.updateEnquiryStatus(body.id, body.status as "New" | "Contacted" | "Confirmed" | "Cancelled");
     if (!updated) {
       return NextResponse.json({ error: "Enquiry not found" }, { status: 404 });
     }
